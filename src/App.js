@@ -1,137 +1,50 @@
-import * as R from "ramda";
-import React, {
-  useState,
-  useEffect
-  // useReducer
-} from "react";
-import API, { graphqlOperation } from "@aws-amplify/api";
-
-import PubSub from "@aws-amplify/pubsub";
-import {
-  onCreateDevice,
-  onUpdateDevice
-  // onUpdateDeviceSummary,
-  // onCreateDeviceSummary
-} from "./graphql/subscriptions";
+import React from "react";
+import { Route, Switch, Link } from "react-router-dom";
 
 // import DeviceReport from "./Components/DeviceReport/device-report";
-import {
-  // getDeviceSummary,
-  listDevices
-} from "./graphql/queries";
-import awsconfig from "./aws-exports";
 
 import "./App.css";
 import DeviceList from "./Components/Devices/device-list";
-// import { persistDataUsingAmplify } from "./Components/Devices/persist-data-using-amplify";
+import Device from "./Components/Devices/Device";
+import DeviceReport from "./Components/DeviceReport/device-report";
+import { Error } from "./Components/Error";
+import API from "@aws-amplify/api";
 
+import PubSub from "@aws-amplify/pubsub";
+import awsconfig from "./aws-exports";
 // Configure Amplify
 API.configure(awsconfig);
 PubSub.configure(awsconfig);
 
-// const usePrevious = value => {
-//   const ref = useRef();
-//   useEffect(() => {
-//     ref.current = value;
-//   });
-//   return ref.current;
-// };
-
 const App = () => {
   // const deviceSummaryUpdatePath = [`value`, `data`, `onUpdateDeviceSummary`];
 
-  const [appState, setAppState] = useState({
-    devices: []
-  });
-
-  useEffect(() => {
-    getListData(listDevices, setAppState);
-  }, []); // useEffect()
-
-  useEffect(() => {
-    deviceUpdateSub(appState, setAppState);
-    // createDeviceSub(appState, setAppState);
-    const deviceListCreatePath = [`value`, `data`, `onCreateDevice`];
-    API.graphql(
-      graphqlOperation(onCreateDevice)
-      // @ts-ignore
-    ).subscribe({
-      next: createdDeviceData => {
-        console.log(
-          `in onCreate fire - appState.devices.length: ${JSON.stringify(
-            appState.devices.length
-          )}`
-        );
-        const newDevice = R.path(deviceListCreatePath)(createdDeviceData);
-        const newState = {
-          devices: [newDevice, ...appState.devices]
-        };
-        setAppState(newState);
-      }
-    });
-  }, [appState]); // useEffect()
-
-  console.log(
-    `in App - appState.devices.length: ${JSON.stringify(
-      appState.devices.length
-    )}`
+  return (
+    <div className="App">
+      App!
+      <ul>
+        <li>
+          <Link to="/">Home</Link>
+        </li>
+        <li>
+          <Link to="/devices">Devices</Link>
+        </li>
+        <li>
+          <Link to="/report">POV Report</Link>
+        </li>
+      </ul>
+      <Switch>
+        <Route exact path="/app" component={App} />
+        <Route exact path="/devices" component={DeviceList} />
+        <Route exact path="/devices/:id" component={Device} />
+        <Route exact path="/report" component={DeviceReport} />
+        <Route component={Error} />
+      </Switch>
+    </div>
   );
-  if (!appState.devices) {
-    return <div>Loading...</div>;
-  } else {
-    return (
-      <div className="App">
-        {/* <DeviceReport
-          totalDevices={appState.totalDevices}
-          customerName={appState.customerName}
-        /> */}
-        <br />
-        <DeviceList devices={appState.devices} />
-      </div>
-    );
-  }
-}; // App()
+};
 
 export default App;
-
-const getListData = async (listQuery, setState) => {
-  try {
-    // await persistDataUsingAmplify();
-    const deviceSummaryQueryDataPath = [`data`, `listDevices`, `items`];
-    const queryResult = await API.graphql(
-      graphqlOperation(listQuery, {
-        limit: 100
-      })
-    );
-    const deviceList = R.path(deviceSummaryQueryDataPath)(queryResult);
-    setState({
-      devices: deviceList
-    });
-  } catch (error) {
-    typeof error !== "string"
-      ? console.log(`Obj error: ${JSON.stringify(error)}`)
-      : console.log(`str error: ${error}`);
-    // console.log(`str error: ${error}`);
-  }
-};
-
-const deviceUpdateSub = async (appState, setState) => {
-  const deviceListUpdatePath = [`value`, `data`, `onUpdateDevice`];
-  await API.graphql(
-    graphqlOperation(onUpdateDevice)
-    // @ts-ignore
-  ).subscribe({
-    next: deviceUpdateData => {
-      const updatedDevice = R.path(deviceListUpdatePath)(deviceUpdateData);
-      console.log(
-        `onDeviceUpdate data: ${JSON.stringify(updatedDevice.macAddress)}`
-      );
-      setState({
-        devices: [...appState.devices, updatedDevice]
-      });
-    }
-  });
-};
 
 // const createDeviceSub = async (appState, setState) => {
 //   const deviceListCreatePath = [`value`, `data`, `onCreateDevice`];
