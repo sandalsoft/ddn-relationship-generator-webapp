@@ -1,7 +1,7 @@
 import * as R from "ramda";
-import { Route, Link } from "react-router-dom";
 import React from "react";
-import Device from "./Device";
+import { Link } from "react-router-dom";
+import { FixedSizeList as List } from "react-window";
 
 const DeviceList = props => {
   const devices = R.pathOr(
@@ -9,32 +9,41 @@ const DeviceList = props => {
     [`history`, `location`, `state`, `devices`],
     props
   );
-  // const { devices } = props.history.location.state;
 
-  // console.log(`devices: ${JSON.stringify(devices)}`);
+  const listProps = {
+    height: 500,
+    itemCount: devices.length,
+    itemSize: 35,
+    width: `75%`
+  };
+
   return (
     <div>
       Device List
       <br />
-      {devices.map(device => (
-        <li key={device.macAddress}>
-          <Link
-            to={{
-              pathname: `/devices/${device.macAddress}`,
-              state: {
-                device
-              }
-            }}
-          >
-            {" "}
-            {device.macAddress}
-          </Link>
-          - {device.macAddress} - {device.osType} - {device.osFamily} -{" "}
-          {device.classificationScore} - {device.dhcpHostname} -{" "}
-          {device.currIpAddress} - {device.classificationState}
-          <Route path="/devices/:id" component={Device} />
-        </li>
-      ))}
+      <List itemData={devices} {...listProps}>
+        {DeviceListItem}
+      </List>
+    </div>
+  );
+};
+
+const DeviceListItem = ({ data, index, style }) => {
+  const device = data[index];
+
+  return (
+    <div style={style}>
+      <Link
+        to={{
+          pathname: `/devices/${device.macAddress}`,
+          state: {
+            device
+          }
+        }}
+      >
+        {device.macAddress}
+      </Link>
+      - {device.fqdn}
     </div>
   );
 };
