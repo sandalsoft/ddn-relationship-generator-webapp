@@ -21,7 +21,7 @@ const App = () => {
 
   return (
     <div className="App">
-      App!
+      (Dev notes: alarmInfos and CertInfo props on Devices are broken)
       <ul>
         <li>
           <Link to="/">Home</Link>
@@ -33,8 +33,8 @@ const App = () => {
           <Link to="/report">POV Report</Link>
         </li>
       </ul>
+      <Route exact path="/app" component={App} />
       <Switch>
-        <Route exact path="/app" component={App} />
         <Route exact path="/devices" component={DeviceList} />
         <Route exact path="/devices/:id" component={Device} />
         <Route exact path="/report" component={DeviceReport} />
