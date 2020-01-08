@@ -1,0 +1,15 @@
+{
+    "dev": {
+        "awscloudformation": {
+            "AuthRoleName": "amplify-povreportdashboard-dev-183423-authRole",
+            "UnauthRoleArn": "arn:aws:iam::119459292316:role/amplify-povreportdashboard-dev-183423-unauthRole",
+            "AuthRoleArn": "arn:aws:iam::119459292316:role/amplify-povreportdashboard-dev-183423-authRole",
+            "Region": "us-east-1",
+            "DeploymentBucketName": "amplify-povreportdashboard-dev-183423-deployment",
+            "UnauthRoleName": "amplify-povreportdashboard-dev-183423-unauthRole",
+            "StackName": "amplify-povreportdashboard-dev-183423",
+            "StackId": "arn:aws:cloudformation:us-east-1:119459292316:stack/amplify-povreportdashboard-dev-183423/cc0e9560-2dc0-11ea-bd82-0e28043c5c55",
+            "AmplifyAppId": "d1ncc0856cg6gs"
+        }
+    }
+}

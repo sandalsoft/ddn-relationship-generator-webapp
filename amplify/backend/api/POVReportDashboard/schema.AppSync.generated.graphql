@@ -1,0 +1,814 @@
+﻿schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
+type Device {
+  _createdAt: Float
+  _updatedAt: Float
+  adUsers: [AWSJSON]
+  adminClassified: Boolean
+  alarmCount: Float
+  alarmInfoMap: [AWSJSON]
+  alarmInfos: [AWSJSON]
+  assetSgt: Float
+  autoGroupSets: String
+  avMatchScore: Float
+  avVendor: String
+  behaviorState: String
+  blacklistEnforceStatus: String
+  blockAllExternalFlows: Boolean
+  certInfo: [AWSJSON]
+  classificationProfileId: String
+  classificationScore: Float
+  classificationSource: String
+  classificationState: String
+  classifyInProgress: Boolean
+  criticality: String
+  currIpAddress: String
+  currentUser: String
+  currentUserAccountName: String
+  customerName: String
+  deleteDevice: Boolean
+  deviceCategory: String
+  deviceDescr: String
+  deviceStatusFlags: String
+  deviceType: String
+  deviceTypeDerived: Boolean
+  deviceTypeImg: String
+  dhcpClassId: String
+  dhcpHostname: String
+  dhcpOptions: String
+  dhcpPresent: Boolean
+  dicomAETitle: String
+  dontInherit: Boolean
+  droppingVectors: Boolean
+  encMethod: String
+  entityType: String
+  equipmentGuid: String
+  evalBehaviorAnomalies: Boolean
+  finalSgt: Float
+  firstSeen: Float
+  flows: [AWSJSON]
+  fqdn: String
+  fwFlowBaselineEnforceStatus: String
+  groupList: [String]
+  guestDevice: Boolean
+  hasADInfo: Boolean
+  hasAlarms: Boolean
+  hasAntivirus: Boolean
+  hasAssetTag: Boolean
+  hasClearedAlarms: Boolean
+  hasDeviceAppsInfo: Boolean
+  hasExternalFlows: Boolean
+  hasFlowVectors: Boolean
+  hasInternalFlows: Boolean
+  hasPhiData: Boolean
+  hasUserDetails: Boolean
+  id: String!
+  incidentScore: Float
+  infobloxInfo: String
+  iotEndpoint: String
+  ipAddress: [String]
+  ipBindingExpiryTime: Float
+  isAgedOut: Boolean
+  isBlacklisted: Boolean
+  isDhcp: Boolean
+  isDicomDest: Boolean
+  knownVulnRiskState: String
+  lastDigProbeScan: Float
+  lastHttpScan: Float
+  lastIpUpdate: Float
+  lastOfflineTs: Float
+  lastPasswdScan: Float
+  lastRapid7VulnScan: Float
+  lastSeen: Float
+  lastTenableVulnScan: Float
+  lastUnUsedTs: Float
+  lastUsed: Float
+  lastVulnScan: Float
+  logoKey: String
+  longMfgName: String
+  macAddress: String!
+  medicalUtilizationRecords: [AWSJSON]
+  mfgName: String
+  modelNameNo: String
+  openPorts: [String]
+  osFamily: String
+  osSource: String
+  osSubFamily: String
+  osType: String
+  osVersion: String
+  packetSgt: Float
+  passwdScanMap: String
+  portList: String
+  profileGuid: String
+  profileList: [String]
+  profileMfg: String
+  proxied: Boolean
+  proxy: Boolean
+  recomputeMds2Info: Boolean
+  recomputeVulnerabilities: Boolean
+  resolvedProfile: String
+  riskScore: Float
+  serialNo: String
+  siteGuid: String
+  strictEnforcement: Float
+  subnet: String
+  swFlowBaselineEnforceStatus: String
+  swVersion: String
+  tags: [String]
+  tenantGuid: String
+  threats: [AWSJSON]
+  useState: String
+  vlan: Float
+  vlanName: String
+  vulnIds: [String]
+  vulnScanCounter: Float
+  whitelistStatus: String
+}
+
+type DeviceSummary {
+  customerName: String!
+  deviceList: [AWSJSON]
+  id: String!
+  threatList: [AWSJSON]
+  totalDevices: Int
+}
+
+type ModelDeviceConnection {
+  items: [Device]
+  nextToken: String
+}
+
+type ModelDeviceSummaryConnection {
+  items: [DeviceSummary]
+  nextToken: String
+}
+
+type Mutation {
+  createDevice(condition: ModelDeviceConditionInput, input: CreateDeviceInput!): Device
+  createDeviceSummary(condition: ModelDeviceSummaryConditionInput, input: CreateDeviceSummaryInput!): DeviceSummary
+  deleteDevice(condition: ModelDeviceConditionInput, input: DeleteDeviceInput!): Device
+  deleteDeviceSummary(condition: ModelDeviceSummaryConditionInput, input: DeleteDeviceSummaryInput!): DeviceSummary
+  updateDevice(condition: ModelDeviceConditionInput, input: UpdateDeviceInput!): Device
+  updateDeviceSummary(condition: ModelDeviceSummaryConditionInput, input: UpdateDeviceSummaryInput!): DeviceSummary
+}
+
+type Query {
+  getDevice(id: ID!): Device
+  getDeviceSummary(id: ID!): DeviceSummary
+  listDeviceSummarys(filter: ModelDeviceSummaryFilterInput, limit: Int, nextToken: String): ModelDeviceSummaryConnection
+  listDevices(filter: ModelDeviceFilterInput, limit: Int, nextToken: String): ModelDeviceConnection
+}
+
+type Subscription {
+  onCreateDevice: Device @aws_subscribe(mutations : ["createDevice"])
+  onCreateDeviceSummary: DeviceSummary @aws_subscribe(mutations : ["createDeviceSummary"])
+  onDeleteDevice: Device @aws_subscribe(mutations : ["deleteDevice"])
+  onDeleteDeviceSummary: DeviceSummary @aws_subscribe(mutations : ["deleteDeviceSummary"])
+  onUpdateDevice: Device @aws_subscribe(mutations : ["updateDevice"])
+  onUpdateDeviceSummary: DeviceSummary @aws_subscribe(mutations : ["updateDeviceSummary"])
+}
+
+enum ModelAttributeTypes {
+  _null
+  binary
+  binarySet
+  bool
+  list
+  map
+  number
+  numberSet
+  string
+  stringSet
+}
+
+enum ModelSortDirection {
+  ASC
+  DESC
+}
+
+input CreateDeviceInput {
+  _createdAt: Float
+  _updatedAt: Float
+  adUsers: [AWSJSON]
+  adminClassified: Boolean
+  alarmCount: Float
+  alarmInfoMap: [AWSJSON]
+  alarmInfos: [AWSJSON]
+  assetSgt: Float
+  autoGroupSets: String
+  avMatchScore: Float
+  avVendor: String
+  behaviorState: String
+  blacklistEnforceStatus: String
+  blockAllExternalFlows: Boolean
+  certInfo: [AWSJSON]
+  classificationProfileId: String
+  classificationScore: Float
+  classificationSource: String
+  classificationState: String
+  classifyInProgress: Boolean
+  criticality: String
+  currIpAddress: String
+  currentUser: String
+  currentUserAccountName: String
+  customerName: String
+  deleteDevice: Boolean
+  deviceCategory: String
+  deviceDescr: String
+  deviceStatusFlags: String
+  deviceType: String
+  deviceTypeDerived: Boolean
+  deviceTypeImg: String
+  dhcpClassId: String
+  dhcpHostname: String
+  dhcpOptions: String
+  dhcpPresent: Boolean
+  dicomAETitle: String
+  dontInherit: Boolean
+  droppingVectors: Boolean
+  encMethod: String
+  entityType: String
+  equipmentGuid: String
+  evalBehaviorAnomalies: Boolean
+  finalSgt: Float
+  firstSeen: Float
+  flows: [AWSJSON]
+  fqdn: String
+  fwFlowBaselineEnforceStatus: String
+  groupList: [String]
+  guestDevice: Boolean
+  hasADInfo: Boolean
+  hasAlarms: Boolean
+  hasAntivirus: Boolean
+  hasAssetTag: Boolean
+  hasClearedAlarms: Boolean
+  hasDeviceAppsInfo: Boolean
+  hasExternalFlows: Boolean
+  hasFlowVectors: Boolean
+  hasInternalFlows: Boolean
+  hasPhiData: Boolean
+  hasUserDetails: Boolean
+  id: ID
+  incidentScore: Float
+  infobloxInfo: String
+  iotEndpoint: String
+  ipAddress: [String]
+  ipBindingExpiryTime: Float
+  isAgedOut: Boolean
+  isBlacklisted: Boolean
+  isDhcp: Boolean
+  isDicomDest: Boolean
+  knownVulnRiskState: String
+  lastDigProbeScan: Float
+  lastHttpScan: Float
+  lastIpUpdate: Float
+  lastOfflineTs: Float
+  lastPasswdScan: Float
+  lastRapid7VulnScan: Float
+  lastSeen: Float
+  lastTenableVulnScan: Float
+  lastUnUsedTs: Float
+  lastUsed: Float
+  lastVulnScan: Float
+  logoKey: String
+  longMfgName: String
+  macAddress: String!
+  medicalUtilizationRecords: [AWSJSON]
+  mfgName: String
+  modelNameNo: String
+  openPorts: [String]
+  osFamily: String
+  osSource: String
+  osSubFamily: String
+  osType: String
+  osVersion: String
+  packetSgt: Float
+  passwdScanMap: String
+  portList: String
+  profileGuid: String
+  profileList: [String]
+  profileMfg: String
+  proxied: Boolean
+  proxy: Boolean
+  recomputeMds2Info: Boolean
+  recomputeVulnerabilities: Boolean
+  resolvedProfile: String
+  riskScore: Float
+  serialNo: String
+  siteGuid: String
+  strictEnforcement: Float
+  subnet: String
+  swFlowBaselineEnforceStatus: String
+  swVersion: String
+  tags: [String]
+  tenantGuid: String
+  threats: [AWSJSON]
+  useState: String
+  vlan: Float
+  vlanName: String
+  vulnIds: [String]
+  vulnScanCounter: Float
+  whitelistStatus: String
+}
+
+input CreateDeviceSummaryInput {
+  customerName: String!
+  deviceList: [AWSJSON]
+  id: ID
+  threatList: [AWSJSON]
+  totalDevices: Int
+}
+
+input DeleteDeviceInput {
+  id: ID
+}
+
+input DeleteDeviceSummaryInput {
+  id: ID
+}
+
+input ModelBooleanInput {
+  attributeExists: Boolean
+  attributeType: ModelAttributeTypes
+  eq: Boolean
+  ne: Boolean
+}
+
+input ModelDeviceConditionInput {
+  _createdAt: ModelFloatInput
+  _updatedAt: ModelFloatInput
+  adUsers: ModelStringInput
+  adminClassified: ModelBooleanInput
+  alarmCount: ModelFloatInput
+  alarmInfoMap: ModelStringInput
+  alarmInfos: ModelStringInput
+  and: [ModelDeviceConditionInput]
+  assetSgt: ModelFloatInput
+  autoGroupSets: ModelStringInput
+  avMatchScore: ModelFloatInput
+  avVendor: ModelStringInput
+  behaviorState: ModelStringInput
+  blacklistEnforceStatus: ModelStringInput
+  blockAllExternalFlows: ModelBooleanInput
+  certInfo: ModelStringInput
+  classificationProfileId: ModelStringInput
+  classificationScore: ModelFloatInput
+  classificationSource: ModelStringInput
+  classificationState: ModelStringInput
+  classifyInProgress: ModelBooleanInput
+  criticality: ModelStringInput
+  currIpAddress: ModelStringInput
+  currentUser: ModelStringInput
+  currentUserAccountName: ModelStringInput
+  customerName: ModelStringInput
+  deleteDevice: ModelBooleanInput
+  deviceCategory: ModelStringInput
+  deviceDescr: ModelStringInput
+  deviceStatusFlags: ModelStringInput
+  deviceType: ModelStringInput
+  deviceTypeDerived: ModelBooleanInput
+  deviceTypeImg: ModelStringInput
+  dhcpClassId: ModelStringInput
+  dhcpHostname: ModelStringInput
+  dhcpOptions: ModelStringInput
+  dhcpPresent: ModelBooleanInput
+  dicomAETitle: ModelStringInput
+  dontInherit: ModelBooleanInput
+  droppingVectors: ModelBooleanInput
+  encMethod: ModelStringInput
+  entityType: ModelStringInput
+  equipmentGuid: ModelStringInput
+  evalBehaviorAnomalies: ModelBooleanInput
+  finalSgt: ModelFloatInput
+  firstSeen: ModelFloatInput
+  flows: ModelStringInput
+  fqdn: ModelStringInput
+  fwFlowBaselineEnforceStatus: ModelStringInput
+  groupList: ModelStringInput
+  guestDevice: ModelBooleanInput
+  hasADInfo: ModelBooleanInput
+  hasAlarms: ModelBooleanInput
+  hasAntivirus: ModelBooleanInput
+  hasAssetTag: ModelBooleanInput
+  hasClearedAlarms: ModelBooleanInput
+  hasDeviceAppsInfo: ModelBooleanInput
+  hasExternalFlows: ModelBooleanInput
+  hasFlowVectors: ModelBooleanInput
+  hasInternalFlows: ModelBooleanInput
+  hasPhiData: ModelBooleanInput
+  hasUserDetails: ModelBooleanInput
+  incidentScore: ModelFloatInput
+  infobloxInfo: ModelStringInput
+  iotEndpoint: ModelStringInput
+  ipAddress: ModelStringInput
+  ipBindingExpiryTime: ModelFloatInput
+  isAgedOut: ModelBooleanInput
+  isBlacklisted: ModelBooleanInput
+  isDhcp: ModelBooleanInput
+  isDicomDest: ModelBooleanInput
+  knownVulnRiskState: ModelStringInput
+  lastDigProbeScan: ModelFloatInput
+  lastHttpScan: ModelFloatInput
+  lastIpUpdate: ModelFloatInput
+  lastOfflineTs: ModelFloatInput
+  lastPasswdScan: ModelFloatInput
+  lastRapid7VulnScan: ModelFloatInput
+  lastSeen: ModelFloatInput
+  lastTenableVulnScan: ModelFloatInput
+  lastUnUsedTs: ModelFloatInput
+  lastUsed: ModelFloatInput
+  lastVulnScan: ModelFloatInput
+  logoKey: ModelStringInput
+  longMfgName: ModelStringInput
+  macAddress: ModelStringInput
+  medicalUtilizationRecords: ModelStringInput
+  mfgName: ModelStringInput
+  modelNameNo: ModelStringInput
+  not: ModelDeviceConditionInput
+  openPorts: ModelStringInput
+  or: [ModelDeviceConditionInput]
+  osFamily: ModelStringInput
+  osSource: ModelStringInput
+  osSubFamily: ModelStringInput
+  osType: ModelStringInput
+  osVersion: ModelStringInput
+  packetSgt: ModelFloatInput
+  passwdScanMap: ModelStringInput
+  portList: ModelStringInput
+  profileGuid: ModelStringInput
+  profileList: ModelStringInput
+  profileMfg: ModelStringInput
+  proxied: ModelBooleanInput
+  proxy: ModelBooleanInput
+  recomputeMds2Info: ModelBooleanInput
+  recomputeVulnerabilities: ModelBooleanInput
+  resolvedProfile: ModelStringInput
+  riskScore: ModelFloatInput
+  serialNo: ModelStringInput
+  siteGuid: ModelStringInput
+  strictEnforcement: ModelFloatInput
+  subnet: ModelStringInput
+  swFlowBaselineEnforceStatus: ModelStringInput
+  swVersion: ModelStringInput
+  tags: ModelStringInput
+  tenantGuid: ModelStringInput
+  threats: ModelStringInput
+  useState: ModelStringInput
+  vlan: ModelFloatInput
+  vlanName: ModelStringInput
+  vulnIds: ModelStringInput
+  vulnScanCounter: ModelFloatInput
+  whitelistStatus: ModelStringInput
+}
+
+input ModelDeviceFilterInput {
+  _createdAt: ModelFloatInput
+  _updatedAt: ModelFloatInput
+  adUsers: ModelStringInput
+  adminClassified: ModelBooleanInput
+  alarmCount: ModelFloatInput
+  alarmInfoMap: ModelStringInput
+  alarmInfos: ModelStringInput
+  and: [ModelDeviceFilterInput]
+  assetSgt: ModelFloatInput
+  autoGroupSets: ModelStringInput
+  avMatchScore: ModelFloatInput
+  avVendor: ModelStringInput
+  behaviorState: ModelStringInput
+  blacklistEnforceStatus: ModelStringInput
+  blockAllExternalFlows: ModelBooleanInput
+  certInfo: ModelStringInput
+  classificationProfileId: ModelStringInput
+  classificationScore: ModelFloatInput
+  classificationSource: ModelStringInput
+  classificationState: ModelStringInput
+  classifyInProgress: ModelBooleanInput
+  criticality: ModelStringInput
+  currIpAddress: ModelStringInput
+  currentUser: ModelStringInput
+  currentUserAccountName: ModelStringInput
+  customerName: ModelStringInput
+  deleteDevice: ModelBooleanInput
+  deviceCategory: ModelStringInput
+  deviceDescr: ModelStringInput
+  deviceStatusFlags: ModelStringInput
+  deviceType: ModelStringInput
+  deviceTypeDerived: ModelBooleanInput
+  deviceTypeImg: ModelStringInput
+  dhcpClassId: ModelStringInput
+  dhcpHostname: ModelStringInput
+  dhcpOptions: ModelStringInput
+  dhcpPresent: ModelBooleanInput
+  dicomAETitle: ModelStringInput
+  dontInherit: ModelBooleanInput
+  droppingVectors: ModelBooleanInput
+  encMethod: ModelStringInput
+  entityType: ModelStringInput
+  equipmentGuid: ModelStringInput
+  evalBehaviorAnomalies: ModelBooleanInput
+  finalSgt: ModelFloatInput
+  firstSeen: ModelFloatInput
+  flows: ModelStringInput
+  fqdn: ModelStringInput
+  fwFlowBaselineEnforceStatus: ModelStringInput
+  groupList: ModelStringInput
+  guestDevice: ModelBooleanInput
+  hasADInfo: ModelBooleanInput
+  hasAlarms: ModelBooleanInput
+  hasAntivirus: ModelBooleanInput
+  hasAssetTag: ModelBooleanInput
+  hasClearedAlarms: ModelBooleanInput
+  hasDeviceAppsInfo: ModelBooleanInput
+  hasExternalFlows: ModelBooleanInput
+  hasFlowVectors: ModelBooleanInput
+  hasInternalFlows: ModelBooleanInput
+  hasPhiData: ModelBooleanInput
+  hasUserDetails: ModelBooleanInput
+  id: ModelStringInput
+  incidentScore: ModelFloatInput
+  infobloxInfo: ModelStringInput
+  iotEndpoint: ModelStringInput
+  ipAddress: ModelStringInput
+  ipBindingExpiryTime: ModelFloatInput
+  isAgedOut: ModelBooleanInput
+  isBlacklisted: ModelBooleanInput
+  isDhcp: ModelBooleanInput
+  isDicomDest: ModelBooleanInput
+  knownVulnRiskState: ModelStringInput
+  lastDigProbeScan: ModelFloatInput
+  lastHttpScan: ModelFloatInput
+  lastIpUpdate: ModelFloatInput
+  lastOfflineTs: ModelFloatInput
+  lastPasswdScan: ModelFloatInput
+  lastRapid7VulnScan: ModelFloatInput
+  lastSeen: ModelFloatInput
+  lastTenableVulnScan: ModelFloatInput
+  lastUnUsedTs: ModelFloatInput
+  lastUsed: ModelFloatInput
+  lastVulnScan: ModelFloatInput
+  logoKey: ModelStringInput
+  longMfgName: ModelStringInput
+  macAddress: ModelStringInput
+  medicalUtilizationRecords: ModelStringInput
+  mfgName: ModelStringInput
+  modelNameNo: ModelStringInput
+  not: ModelDeviceFilterInput
+  openPorts: ModelStringInput
+  or: [ModelDeviceFilterInput]
+  osFamily: ModelStringInput
+  osSource: ModelStringInput
+  osSubFamily: ModelStringInput
+  osType: ModelStringInput
+  osVersion: ModelStringInput
+  packetSgt: ModelFloatInput
+  passwdScanMap: ModelStringInput
+  portList: ModelStringInput
+  profileGuid: ModelStringInput
+  profileList: ModelStringInput
+  profileMfg: ModelStringInput
+  proxied: ModelBooleanInput
+  proxy: ModelBooleanInput
+  recomputeMds2Info: ModelBooleanInput
+  recomputeVulnerabilities: ModelBooleanInput
+  resolvedProfile: ModelStringInput
+  riskScore: ModelFloatInput
+  serialNo: ModelStringInput
+  siteGuid: ModelStringInput
+  strictEnforcement: ModelFloatInput
+  subnet: ModelStringInput
+  swFlowBaselineEnforceStatus: ModelStringInput
+  swVersion: ModelStringInput
+  tags: ModelStringInput
+  tenantGuid: ModelStringInput
+  threats: ModelStringInput
+  useState: ModelStringInput
+  vlan: ModelFloatInput
+  vlanName: ModelStringInput
+  vulnIds: ModelStringInput
+  vulnScanCounter: ModelFloatInput
+  whitelistStatus: ModelStringInput
+}
+
+input ModelDeviceSummaryConditionInput {
+  and: [ModelDeviceSummaryConditionInput]
+  customerName: ModelStringInput
+  deviceList: ModelStringInput
+  not: ModelDeviceSummaryConditionInput
+  or: [ModelDeviceSummaryConditionInput]
+  threatList: ModelStringInput
+  totalDevices: ModelIntInput
+}
+
+input ModelDeviceSummaryFilterInput {
+  and: [ModelDeviceSummaryFilterInput]
+  customerName: ModelStringInput
+  deviceList: ModelStringInput
+  id: ModelStringInput
+  not: ModelDeviceSummaryFilterInput
+  or: [ModelDeviceSummaryFilterInput]
+  threatList: ModelStringInput
+  totalDevices: ModelIntInput
+}
+
+input ModelFloatInput {
+  attributeExists: Boolean
+  attributeType: ModelAttributeTypes
+  between: [Float]
+  eq: Float
+  ge: Float
+  gt: Float
+  le: Float
+  lt: Float
+  ne: Float
+}
+
+input ModelIDInput {
+  attributeExists: Boolean
+  attributeType: ModelAttributeTypes
+  beginsWith: ID
+  between: [ID]
+  contains: ID
+  eq: ID
+  ge: ID
+  gt: ID
+  le: ID
+  lt: ID
+  ne: ID
+  notContains: ID
+  size: ModelSizeInput
+}
+
+input ModelIntInput {
+  attributeExists: Boolean
+  attributeType: ModelAttributeTypes
+  between: [Int]
+  eq: Int
+  ge: Int
+  gt: Int
+  le: Int
+  lt: Int
+  ne: Int
+}
+
+input ModelSizeInput {
+  between: [Int]
+  eq: Int
+  ge: Int
+  gt: Int
+  le: Int
+  lt: Int
+  ne: Int
+}
+
+input ModelStringInput {
+  attributeExists: Boolean
+  attributeType: ModelAttributeTypes
+  beginsWith: String
+  between: [String]
+  contains: String
+  eq: String
+  ge: String
+  gt: String
+  le: String
+  lt: String
+  ne: String
+  notContains: String
+  size: ModelSizeInput
+}
+
+input UpdateDeviceInput {
+  _createdAt: Float
+  _updatedAt: Float
+  adUsers: [AWSJSON]
+  adminClassified: Boolean
+  alarmCount: Float
+  alarmInfoMap: [AWSJSON]
+  alarmInfos: [AWSJSON]
+  assetSgt: Float
+  autoGroupSets: String
+  avMatchScore: Float
+  avVendor: String
+  behaviorState: String
+  blacklistEnforceStatus: String
+  blockAllExternalFlows: Boolean
+  certInfo: [AWSJSON]
+  classificationProfileId: String
+  classificationScore: Float
+  classificationSource: String
+  classificationState: String
+  classifyInProgress: Boolean
+  criticality: String
+  currIpAddress: String
+  currentUser: String
+  currentUserAccountName: String
+  customerName: String
+  deleteDevice: Boolean
+  deviceCategory: String
+  deviceDescr: String
+  deviceStatusFlags: String
+  deviceType: String
+  deviceTypeDerived: Boolean
+  deviceTypeImg: String
+  dhcpClassId: String
+  dhcpHostname: String
+  dhcpOptions: String
+  dhcpPresent: Boolean
+  dicomAETitle: String
+  dontInherit: Boolean
+  droppingVectors: Boolean
+  encMethod: String
+  entityType: String
+  equipmentGuid: String
+  evalBehaviorAnomalies: Boolean
+  finalSgt: Float
+  firstSeen: Float
+  flows: [AWSJSON]
+  fqdn: String
+  fwFlowBaselineEnforceStatus: String
+  groupList: [String]
+  guestDevice: Boolean
+  hasADInfo: Boolean
+  hasAlarms: Boolean
+  hasAntivirus: Boolean
+  hasAssetTag: Boolean
+  hasClearedAlarms: Boolean
+  hasDeviceAppsInfo: Boolean
+  hasExternalFlows: Boolean
+  hasFlowVectors: Boolean
+  hasInternalFlows: Boolean
+  hasPhiData: Boolean
+  hasUserDetails: Boolean
+  id: String!
+  incidentScore: Float
+  infobloxInfo: String
+  iotEndpoint: String
+  ipAddress: [String]
+  ipBindingExpiryTime: Float
+  isAgedOut: Boolean
+  isBlacklisted: Boolean
+  isDhcp: Boolean
+  isDicomDest: Boolean
+  knownVulnRiskState: String
+  lastDigProbeScan: Float
+  lastHttpScan: Float
+  lastIpUpdate: Float
+  lastOfflineTs: Float
+  lastPasswdScan: Float
+  lastRapid7VulnScan: Float
+  lastSeen: Float
+  lastTenableVulnScan: Float
+  lastUnUsedTs: Float
+  lastUsed: Float
+  lastVulnScan: Float
+  logoKey: String
+  longMfgName: String
+  macAddress: String
+  medicalUtilizationRecords: [AWSJSON]
+  mfgName: String
+  modelNameNo: String
+  openPorts: [String]
+  osFamily: String
+  osSource: String
+  osSubFamily: String
+  osType: String
+  osVersion: String
+  packetSgt: Float
+  passwdScanMap: String
+  portList: String
+  profileGuid: String
+  profileList: [String]
+  profileMfg: String
+  proxied: Boolean
+  proxy: Boolean
+  recomputeMds2Info: Boolean
+  recomputeVulnerabilities: Boolean
+  resolvedProfile: String
+  riskScore: Float
+  serialNo: String
+  siteGuid: String
+  strictEnforcement: Float
+  subnet: String
+  swFlowBaselineEnforceStatus: String
+  swVersion: String
+  tags: [String]
+  tenantGuid: String
+  threats: [AWSJSON]
+  useState: String
+  vlan: Float
+  vlanName: String
+  vulnIds: [String]
+  vulnScanCounter: Float
+  whitelistStatus: String
+}
+
+input UpdateDeviceSummaryInput {
+  customerName: String
+  deviceList: [AWSJSON]
+  id: String!
+  threatList: [AWSJSON]
+  totalDevices: Int
+}

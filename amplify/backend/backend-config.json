@@ -1,0 +1,20 @@
+{
+	"api": {
+		"POVReportDashboard": {
+			"service": "AppSync",
+			"providerPlugin": "awscloudformation",
+			"output": {
+				"authConfig": {
+					"additionalAuthenticationProviders": [],
+					"defaultAuthentication": {
+						"authenticationType": "API_KEY",
+						"apiKeyConfig": {
+							"description": "year long",
+							"apiKeyExpirationDays": "365"
+						}
+					}
+				}
+			}
+		}
+	}
+}
