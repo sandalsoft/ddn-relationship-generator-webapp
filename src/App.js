@@ -1,3 +1,4 @@
+import axios from "axios";
 import * as R from "ramda";
 import PubSub from "@aws-amplify/pubsub";
 import awsconfig from "./aws-exports";
@@ -19,6 +20,14 @@ PubSub.configure(awsconfig);
 
 const ListDevicePaginationTokenPath = [`data`, `listDevices`, `nextToken`];
 const ListDeviceSummaryQueryDataPath = [`data`, `listDevices`, `items`];
+
+//***********
+//***********
+const USE_TEST_DATA = true;
+//***********
+const TestDataUrl = `https://dl-pub.s3.us-east-2.amazonaws.com/devices.3102.json`;
+//***********
+//***********
 
 const App = () => {
   const reducer = (state, action) => {
@@ -43,8 +52,10 @@ const App = () => {
   });
 
   useEffect(() => {
-    getListData(listDevices, dispatch);
-  }, []); // useEffect()
+    USE_TEST_DATA
+      ? fetchTestDevices(TestDataUrl, dispatch)
+      : getListData(listDevices, dispatch);
+  }, []);
 
   useEffect(() => {
     deviceUpdateSub(state, dispatch);
@@ -83,7 +94,16 @@ const App = () => {
           </Link>
         </li>
         <li>
-          <Link to="/report">POV Report</Link>
+          <Link
+            to={{
+              pathname: `/report`,
+              state: {
+                devices: state.devices
+              }
+            }}
+          >
+            POV Report
+          </Link>
         </li>
       </ul>
       <Switch>
@@ -126,6 +146,18 @@ const deviceUpdateSub = async (state, dispatch) => {
         devices: [...state.devices, ...updatedDevice]
       });
     }
+  });
+};
+
+const fetchTestDevices = async (url, dispatch, numDevices = 100) => {
+  console.log(`LOADING TEST DATA - ${numDevices} devices`);
+
+  // const allDevices = require(filePath);
+  const { data } = await axios.get(url);
+  const devices = R.take(numDevices, data);
+  dispatch({
+    type: `add`,
+    devices: [...devices]
   });
 };
 
