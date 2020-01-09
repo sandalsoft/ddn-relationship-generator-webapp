@@ -2,13 +2,19 @@
   background-color: #aaa;
 }
 
-.NewFont,
+.device-list-header {
+  color: black;
+  font-family: "Oswald", sans-serif;
+  text-align: center;
+}
+
 .device-list-item {
   font-family: "Assistant", sans-serif;
   font-size: 16px;
   color: black;
+  vertical-align: middle;
 }
 
 .device-list-item:hover {
-  background-color: #cce7e7;
+  background-color: #e2f6fa;
 }
