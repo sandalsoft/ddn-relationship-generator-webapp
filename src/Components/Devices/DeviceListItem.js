@@ -17,7 +17,7 @@ const DeviceListItem = ({ data, index, style }) => {
       >
         {device.macAddress}
       </Link>
-      - {device.fqdn}
+      {device.fqdn}
     </div>
   );
 };

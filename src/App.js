@@ -12,7 +12,7 @@ import { listDevices } from "./graphql/queries";
 import { Error } from "./Components/Error";
 import DeviceList from "./Components/Devices/device-list";
 import DeviceReport from "./Components/DeviceReport/device-report";
-import Device from "./Components/Devices/Device";
+import DeviceDetail from "./Components/Devices/DeviceDetail";
 import "./POVDashboard.css";
 
 // Configure Amplify
@@ -111,7 +111,7 @@ const App = () => {
       <Switch>
         <Route exact path="/app" component={App} />
         <Route exact path="/devices" component={DeviceList} />
-        <Route exact path="/devices/:id" component={Device} />
+        <Route exact path="/devices/:id" component={DeviceDetail} />
         <Route exact path="/report" component={DeviceReport} />
         <Route component={Error} />
       </Switch>
