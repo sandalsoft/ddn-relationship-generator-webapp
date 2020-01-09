@@ -8,15 +8,8 @@ const DeviceReport = props => {
     props
   );
 
-  console.log();
-  console.log();
-  console.log(`${JSON.stringify(devices)}`);
-  console.log();
-  console.log();
-  console.log();
-
   return (
-    <div>
+    <div className="POVReport">
       <ul>customer Name: {props.customerName}</ul>
       <ul>totalDevices: {devices.length}</ul>
     </div>

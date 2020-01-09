@@ -13,6 +13,7 @@ import { Error } from "./Components/Error";
 import DeviceList from "./Components/Devices/device-list";
 import DeviceReport from "./Components/DeviceReport/device-report";
 import Device from "./Components/Devices/Device";
+import "./POVDashboard.css";
 
 // Configure Amplify
 API.configure(awsconfig);
@@ -25,7 +26,8 @@ const ListDeviceSummaryQueryDataPath = [`data`, `listDevices`, `items`];
 //***********
 const USE_TEST_DATA = true;
 //***********
-const TestDataUrl = `https://dl-pub.s3.us-east-2.amazonaws.com/devices.3102.json`;
+const TestDataUrl = `http://localhost:3000/devices.3102.ignore.json`;
+// const TestDataUrl = `https://dl-pub.s3.us-east-2.amazonaws.com/devices.3102.json`;
 //***********
 //***********
 

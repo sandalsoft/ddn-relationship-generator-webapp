@@ -1,5 +1,6 @@
 .App {
   text-align: center;
+  background-color: #282c34;
 }
 
 .App-header {
@@ -24,10 +25,4 @@
   to {
     transform: rotate(360deg);
   }
-}
-
-.device-list-item {
-  font-family: "Assistant", sans-serif;
-  font-size: 20px;
-  color: black;
 }

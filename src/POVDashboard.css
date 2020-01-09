@@ -1,0 +1,14 @@
+.POVReport {
+  background-color: #aaa;
+}
+
+.NewFont,
+.device-list-item {
+  font-family: "Assistant", sans-serif;
+  font-size: 16px;
+  color: black;
+}
+
+.device-list-item:hover {
+  background-color: #cce7e7;
+}
