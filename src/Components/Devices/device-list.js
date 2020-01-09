@@ -1,7 +1,8 @@
 import * as R from "ramda";
 import React from "react";
-import { Link } from "react-router-dom";
+
 import { FixedSizeList as List } from "react-window";
+import DeviceListItem from "./DeviceListItem";
 
 const DeviceList = props => {
   const devices = R.pathOr(
@@ -24,26 +25,6 @@ const DeviceList = props => {
       <List itemData={devices} {...listProps}>
         {DeviceListItem}
       </List>
-    </div>
-  );
-};
-
-const DeviceListItem = ({ data, index, style }) => {
-  const device = data[index];
-
-  return (
-    <div style={style}>
-      <Link
-        to={{
-          pathname: `/devices/${device.macAddress}`,
-          state: {
-            device
-          }
-        }}
-      >
-        {device.macAddress}
-      </Link>
-      - {device.fqdn}
     </div>
   );
 };

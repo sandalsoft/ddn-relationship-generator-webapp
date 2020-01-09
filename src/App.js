@@ -2,15 +2,10 @@ import * as R from "ramda";
 import PubSub from "@aws-amplify/pubsub";
 import awsconfig from "./aws-exports";
 
-import React, { useState, useEffect } from "react";
+import React, { useReducer, useEffect } from "react";
 import { Route, Link, Switch } from "react-router-dom";
 import API, { graphqlOperation } from "@aws-amplify/api";
-import {
-  onCreateDevice,
-  onUpdateDevice
-  // onUpdateDeviceSummary,
-  // onCreateDeviceSummary
-} from "./graphql/subscriptions";
+import { onCreateDevice, onUpdateDevice } from "./graphql/subscriptions";
 import { listDevices } from "./graphql/queries";
 
 import { Error } from "./Components/Error";
@@ -21,44 +16,52 @@ import Device from "./Components/Devices/Device";
 // Configure Amplify
 API.configure(awsconfig);
 PubSub.configure(awsconfig);
+
+const ListDevicePaginationTokenPath = [`data`, `listDevices`, `nextToken`];
+const ListDeviceSummaryQueryDataPath = [`data`, `listDevices`, `items`];
+
 const App = () => {
-  // const DeviceList = props => {
-  const [appState, setAppState] = useState({
+  const reducer = (state, action) => {
+    switch (action.type) {
+      case `set`: {
+        return {
+          devices: [...action.devices]
+        };
+      }
+      case "add": {
+        return {
+          devices: [...state.devices, ...action.devices]
+        };
+      }
+      default:
+        return state;
+    }
+  };
+
+  const [state, dispatch] = useReducer(reducer, {
     devices: []
   });
 
   useEffect(() => {
-    getListData(listDevices, setAppState);
+    getListData(listDevices, dispatch);
   }, []); // useEffect()
 
   useEffect(() => {
-    deviceUpdateSub(appState, setAppState);
-    // createDeviceSub(appState, setAppState);
+    deviceUpdateSub(state, dispatch);
+
+    // createDeviceSub(state, dispatch);
     const deviceListCreatePath = [`value`, `data`, `onCreateDevice`];
     API.graphql(
       graphqlOperation(onCreateDevice)
       // @ts-ignore
     ).subscribe({
       next: createdDeviceData => {
-        console.log(
-          `in onCreate fire - appState.devices.length: ${JSON.stringify(
-            appState.devices.length
-          )}`
-        );
         const newDevice = R.path(deviceListCreatePath)(createdDeviceData);
-        const newState = {
-          devices: [newDevice, ...appState.devices]
-        };
-        setAppState(newState);
+        //@ts-ignore
+        dispatch({ type: `add`, devices: [...newDevice] });
       }
     });
-  }, [appState]); // useEffect()
-
-  console.log(
-    `in App - appState.devices.length: ${JSON.stringify(
-      appState.devices.length
-    )}`
-  );
+  }, [state]); // useEffect()
 
   return (
     <div className="App">
@@ -72,11 +75,11 @@ const App = () => {
             to={{
               pathname: `/devices`,
               state: {
-                devices: appState.devices
+                devices: state.devices
               }
             }}
           >
-            Devices
+            Devices ({state?.devices?.length})
           </Link>
         </li>
         <li>
@@ -95,29 +98,19 @@ const App = () => {
 };
 
 export default App;
-
-const getListData = async (listQuery, setState) => {
+const getListData = async (listQuery, dispatch) => {
   try {
-    // await persistDataUsingAmplify();
-    const deviceSummaryQueryDataPath = [`data`, `listDevices`, `items`];
-    const queryResult = await API.graphql(
-      graphqlOperation(listQuery, {
-        limit: 100
-      })
-    );
-    const deviceList = R.path(deviceSummaryQueryDataPath)(queryResult);
-    setState({
-      devices: deviceList
-    });
+    const deviceList = await fetchAllDevices(dispatch, listQuery);
+    dispatch({ type: `set`, devices: deviceList });
   } catch (error) {
-    typeof error !== "string"
-      ? console.log(`Obj error: ${JSON.stringify(error)}`)
+    typeof error === "string"
+      ? console.log(`Obj error: ${error}`)
       : console.log(`str error: ${error}`);
     // console.log(`str error: ${error}`);
   }
 };
 
-const deviceUpdateSub = async (appState, setState) => {
+const deviceUpdateSub = async (state, dispatch) => {
   const deviceListUpdatePath = [`value`, `data`, `onUpdateDevice`];
   await API.graphql(
     graphqlOperation(onUpdateDevice)
@@ -128,9 +121,67 @@ const deviceUpdateSub = async (appState, setState) => {
       console.log(
         `onDeviceUpdate data: ${JSON.stringify(updatedDevice.macAddress)}`
       );
-      setState({
-        devices: [...appState.devices, updatedDevice]
+      dispatch({
+        type: `add`,
+        devices: [...state.devices, ...updatedDevice]
       });
     }
   });
 };
+
+const fetchData = async (query, params) =>
+  await API.graphql(graphqlOperation(query, params));
+
+const fetchAllDevices = async (dispatch, query, nextToken) => {
+  try {
+    const limit = 1000;
+
+    let params;
+    if (nextToken) {
+      params = {
+        limit,
+        nextToken
+      };
+    } else {
+      params = { limit };
+    }
+    const results = await fetchData(query, params);
+    const devices = pluckDevicesFromResults(results);
+
+    dispatch({
+      type: `add`,
+      devices: [...devices]
+    });
+
+    console.log(`Fetching more devices...: ${devices.length}`);
+    if (hasMoreDevices(results)) {
+      const nextToken = pluckFromResults(
+        ListDevicePaginationTokenPath,
+        results
+      );
+      const totalDevices = [
+        ...devices,
+        ...(await fetchAllDevices(dispatch, listDevices, nextToken))
+      ];
+      console.log(`totalDevices.length: ${totalDevices.length}`);
+      return totalDevices;
+    } else {
+      console.log(`noMoreDevices, returning ${devices.length}`);
+      return devices;
+    }
+  } catch (error) {
+    console.log(`error in fetchAllDevices`);
+
+    typeof error !== "string"
+      ? console.log(`error: ${error}`)
+      : console.log(`error: ${JSON.stringify(error)}`);
+  }
+};
+
+const hasMoreDevices = results =>
+  !R.isNil(pluckFromResults(ListDevicePaginationTokenPath, results));
+
+const pluckDevicesFromResults = results =>
+  pluckFromResults(ListDeviceSummaryQueryDataPath, results);
+
+const pluckFromResults = (path, results) => R.path(path)(results);
