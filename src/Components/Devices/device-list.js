@@ -3,6 +3,7 @@ import React from "react";
 import { useHistory } from "react-router-dom";
 import { Column, Table } from "react-virtualized";
 import getTimeString from "../../util/get-time-string";
+// import { Row, Col } from "react-flex-proto";
 
 import "react-virtualized/styles.css"; // only needs to be imported once
 

@@ -13,8 +13,9 @@ import { Error } from "./Components/Error";
 import DeviceList from "./Components/Devices/device-list";
 import DeviceReport from "./Components/DeviceReport/device-report";
 import DeviceDetail from "./Components/Devices/DeviceDetail";
-import "./POVDashboard.css";
-
+// import "./POVDashboard.css";
+import "./BlurBootstrap.css";
+import bgImage from "./ordr.background.png";
 // Configure Amplify
 API.configure(awsconfig);
 PubSub.configure(awsconfig);
@@ -77,7 +78,8 @@ const App = () => {
   }, [state]); // useEffect()
 
   return (
-    <div className="App">
+    <div className="app">
+      <div style={{ backgroundImage: `url(${bgImage})` }} />
       (Dev notes: alarmInfos and CertInfo props on Devices are broken)
       <ul>
         <li>

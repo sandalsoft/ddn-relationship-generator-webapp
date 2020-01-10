@@ -1,5 +1,16 @@
 import * as R from "ramda";
 import React from "react";
+import { Link } from "react-router-dom";
+// import { Row, Col } from "react-flex-proto";
+
+// const renderBreadcrumbs = () => {
+//   return (
+//     <Breadcrumbs>
+//       <Link to="/">Home</Link>
+//       POV Report
+//     </Breadcrumbs>
+//   );
+// };
 
 const DeviceReport = props => {
   const devices = R.pathOr(
@@ -9,10 +20,19 @@ const DeviceReport = props => {
   );
 
   return (
-    <div className="POVReport">
+    <div className="pov-report">
       <ul>customer Name: {props.customerName}</ul>
       <ul>totalDevices: {devices.length}</ul>
     </div>
+    // <Page actionBar={renderBreadcrumbs()} title="Table Types">
+    //   <Panel title="Table with Hover Effect">
+    //     <h5>POV Report</h5>
+    //     <div className="pov-report">
+    //       <ul>customer Name: {props.customerName}</ul>
+    //       <ul>totalDevices: {devices.length}</ul>
+    //     </div>
+    //   </Panel>
+    // </Page>
   );
 };
 
