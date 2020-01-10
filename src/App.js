@@ -4,18 +4,15 @@ import PubSub from "@aws-amplify/pubsub";
 import awsconfig from "./aws-exports";
 
 import React, { useReducer, useEffect } from "react";
-import { Route, Link, Switch } from "react-router-dom";
+
 import API, { graphqlOperation } from "@aws-amplify/api";
 import { onCreateDevice, onUpdateDevice } from "./graphql/subscriptions";
 import { listDevices } from "./graphql/queries";
 
-import { Error } from "./Components/Error";
-import DeviceList from "./Components/Devices/device-list";
-import DeviceReport from "./Components/DeviceReport/device-report";
-import DeviceDetail from "./Components/Devices/DeviceDetail";
-// import "./POVDashboard.css";
-import "./BlurBootstrap.css";
-import bgImage from "./ordr.background.png";
+import "./POVDashboard.css";
+import "antd/dist/antd.css";
+import Header from "./Components/Layout/Header";
+
 // Configure Amplify
 API.configure(awsconfig);
 PubSub.configure(awsconfig);
@@ -79,44 +76,8 @@ const App = () => {
 
   return (
     <div className="app">
-      <div style={{ backgroundImage: `url(${bgImage})` }} />
       (Dev notes: alarmInfos and CertInfo props on Devices are broken)
-      <ul>
-        <li>
-          <Link to="/">Home</Link>
-        </li>
-        <li>
-          <Link
-            to={{
-              pathname: `/devices`,
-              state: {
-                devices: state.devices
-              }
-            }}
-          >
-            Devices ({state?.devices?.length})
-          </Link>
-        </li>
-        <li>
-          <Link
-            to={{
-              pathname: `/report`,
-              state: {
-                devices: state.devices
-              }
-            }}
-          >
-            POV Report
-          </Link>
-        </li>
-      </ul>
-      <Switch>
-        <Route exact path="/app" component={App} />
-        <Route exact path="/devices" component={DeviceList} />
-        <Route exact path="/devices/:id" component={DeviceDetail} />
-        <Route exact path="/report" component={DeviceReport} />
-        <Route component={Error} />
-      </Switch>
+      <Header state={state} />
     </div>
   );
 };

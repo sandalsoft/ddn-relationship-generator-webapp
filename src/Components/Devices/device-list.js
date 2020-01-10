@@ -3,7 +3,7 @@ import React from "react";
 import { useHistory } from "react-router-dom";
 import { Column, Table } from "react-virtualized";
 import getTimeString from "../../util/get-time-string";
-// import { Row, Col } from "react-flex-proto";
+import { isNulley } from "../../util";
 
 import "react-virtualized/styles.css"; // only needs to be imported once
 
@@ -15,7 +15,7 @@ const DeviceList = props => {
     [`history`, `location`, `state`, `devices`],
     props
   );
-
+  console.log(`devices: ${JSON.stringify(props)}`);
   const rowClassName = `device-list-item`;
   const headerClassName = `device-list-header`;
 
@@ -102,7 +102,7 @@ const DeviceList = props => {
           label="First Seen"
           dataKey="firstSeen"
           cellRenderer={({ cellData }) =>
-            cellData === null ? `-` : getTimeString(cellData)
+            isNulley(cellData) ? `-` : getTimeString(cellData)
           }
         />
         <Column
