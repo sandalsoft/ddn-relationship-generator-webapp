@@ -19,7 +19,6 @@ const DeviceList = props => {
 
   const onRowClick = ({ event, index, rowData }) => {
     const device = rowData;
-    // console.log(`rowData: ${JSON.stringify(rowData.macAddress)}`);
     history.push(`/devices/${device.macAddress}`, { device });
   };
 

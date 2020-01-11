@@ -1,6 +1,6 @@
 import React from "react";
 import { useHistory } from "react-router-dom";
-import { Table } from "antd";
+import { Table, PageHeader, Icon } from "antd";
 import { Tooltip } from "antd";
 import Popup from "reactjs-popup";
 import * as R from "ramda";
@@ -55,10 +55,15 @@ const DeviceTable = props => {
       render: (text, row, index) => (text === `NOT_FOUND` ? `-` : text)
     },
     {
-      title: "is IoT?",
+      title: <span>IoT Device</span>,
       dataIndex: "iotEndpoint",
       align: `center`,
-      render: (text, row, index) => (text === `NOT_FOUND` ? `-` : text)
+      render: (text, row, index) =>
+        text === `IOT_ENDPOINT` ? (
+          <Icon type="check-circle" theme="twoTone" twoToneColor="#52c41a" />
+        ) : (
+          <Icon type="close-circle" theme="twoTone" twoToneColor="#ff1743" />
+        )
     },
 
     {
@@ -92,22 +97,22 @@ const DeviceTable = props => {
 
   return (
     <div>
+      <PageHeader
+        style={{ border: "1px solid rgb(235, 237, 240)" }}
+        onBack={() => history.push(`/`, { devices })}
+        title="Device List"
+        subTitle="All changes in environment are updates in real-time"
+      />
+
       <Table
         columns={columns}
         dataSource={devices}
+        rowKey="id"
         size="small"
         render={(text, record, index) => {
           console.log(`index: ${JSON.stringify(index)}`);
           console.log(`text: ${JSON.stringify(text)}`);
           console.log(`record: ${JSON.stringify(record)}`);
-
-          // return {
-          //   onClick: event => {}, // click row
-          //   onDoubleClick: event => {}, // double click row
-          //   onContextMenu: event => {}, // right button click row
-          //   onMouseEnter: event => {}, // mouse enter row
-          //   onMouseLeave: event => {} // mouse leave row
-          // };
         }}
       />
     </div>

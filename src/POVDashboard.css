@@ -9,6 +9,12 @@
   width: 100%;
   text-align: center;
 }
+
 .device-list-item:hover {
-  background-color: #e2f6fa;
+  background-color: red;
+}
+
+.pov-report {
+  background-color: #82bbcd;
+  height: "100%";
 }

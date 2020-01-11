@@ -4,49 +4,52 @@ import { useHistory } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { Menu, Icon } from "antd";
 
+const pathMenuKeyMapping = {
+  "/report": `3`,
+  "/devices": `2`,
+  "/": `1`
+};
+
 const NavSidebar = props => {
   const { state } = props;
   const history = useHistory();
 
+  const getPathFromKey = value =>
+    Object.keys(pathMenuKeyMapping).find(
+      key => pathMenuKeyMapping[key] === value
+    );
+  const getCurrentPathKey = history => {
+    const { pathname } = history.location;
+    return [pathMenuKeyMapping[pathname]];
+  };
+
   const onClick = ({ item, key, keyPath, domEvent }) => {
-    switch (key) {
-      case `1`:
-        history.push(`/`, {
-          devices: state.devices
-        });
-        break;
-      case `2`:
-        history.push(`/devices`, {
-          devices: state.devices
-        });
-        break;
-      case `3`:
-        history.push(`/report`, {
-          devices: state.devices
-        });
-        break;
-      default:
-        break;
-    }
+    const pathname = getPathFromKey(key);
+    history.push(pathname, {
+      devices: state.devices
+    });
   };
 
   return (
     <div className="sidebar">
       <Menu
-        defaultSelectedKeys={["1"]}
-        defaultOpenKeys={["sub1"]}
+        defaultSelectedKeys={getCurrentPathKey(history)}
         mode="vertical"
         theme="light"
         onClick={onClick}
       >
-        <Menu.Item key="1" title="Hause">
-          <span>
+        <Menu.Item
+          key="1"
+          title="Hause"
+          style={{ ":hover": { backgroundColor: "#e2f6fa" } }}
+        >
+          <span className="nav-menu-item">
             <Icon type="home" />
             <Link to="/">Home</Link>
           </span>
         </Menu.Item>
         <Menu.Item key="2">
-          <span>
+          <span className="nav-menu-item">
             <Icon type="ordered-list" />
             <Link
               to={{
@@ -61,7 +64,7 @@ const NavSidebar = props => {
           </span>
         </Menu.Item>
         <Menu.Item key="3">
-          <span>
+          <span className="nav-menu-item">
             <Icon type="area-chart" />
             <Link
               to={{
