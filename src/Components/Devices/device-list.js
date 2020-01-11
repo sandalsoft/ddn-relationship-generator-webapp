@@ -9,25 +9,22 @@ import "react-virtualized/styles.css"; // only needs to be imported once
 
 const DeviceList = props => {
   const history = useHistory();
-
   const devices = R.pathOr(
-    [{ macAddress: `no devices yet` }],
+    [{ id: `no devices yet` }],
     [`history`, `location`, `state`, `devices`],
     props
   );
-  console.log(`devices: ${JSON.stringify(props)}`);
   const rowClassName = `device-list-item`;
   const headerClassName = `device-list-header`;
 
   const onRowClick = ({ event, index, rowData }) => {
     const device = rowData;
-    console.log(`rowData: ${JSON.stringify(rowData.macAddress)}`);
+    // console.log(`rowData: ${JSON.stringify(rowData.macAddress)}`);
     history.push(`/devices/${device.macAddress}`, { device });
   };
 
   return (
     <div className="DeviceList">
-      Device List
       <Table
         height={700}
         width={1400}

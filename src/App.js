@@ -3,15 +3,27 @@ import * as R from "ramda";
 import PubSub from "@aws-amplify/pubsub";
 import awsconfig from "./aws-exports";
 
+import { Route, Switch } from "react-router-dom";
+
+import { Error } from "./Components/Error";
+// import DeviceList from "./Components/Devices/device-list";
+import DeviceReport from "./Components/DeviceReport/device-report";
+import DeviceDetail from "./Components/Devices/DeviceDetail";
+
 import React, { useReducer, useEffect } from "react";
 
 import API, { graphqlOperation } from "@aws-amplify/api";
 import { onCreateDevice, onUpdateDevice } from "./graphql/subscriptions";
 import { listDevices } from "./graphql/queries";
 
-import "./POVDashboard.css";
+// import "./POVDashboard.css";
 import "antd/dist/antd.css";
-import Header from "./Components/Layout/Header";
+import AppHeader from "./Components/Layout/AppHeader";
+import { Layout } from "antd";
+import NavSidebar from "./Components/Layout/NavSidebar";
+import DeviceTable from "./Components/Devices/DeviceTable";
+
+const { Header, Footer, Sider, Content } = Layout;
 
 // Configure Amplify
 API.configure(awsconfig);
@@ -76,8 +88,26 @@ const App = () => {
 
   return (
     <div className="app">
-      (Dev notes: alarmInfos and CertInfo props on Devices are broken)
-      <Header state={state} />
+      <Layout>
+        <Header style={{ background: "#fff", padding: 10 }}>
+          <AppHeader state={state} />
+        </Header>
+        <Layout>
+          <Sider style={{ height: `100%` }}>
+            <NavSidebar state={state} />
+          </Sider>
+          <Content style={{ background: "#fff", padding: 10 }}>
+            <Switch>
+              <Route exact path="/app" component={App} />
+              <Route exact path="/devices" component={DeviceTable} />
+              <Route exact path="/devices/:id" component={DeviceDetail} />
+              <Route exact path="/report" component={DeviceReport} />
+              <Route component={Error} />
+            </Switch>
+          </Content>
+        </Layout>
+        <Footer>FOOTER</Footer>
+      </Layout>
     </div>
   );
 };
