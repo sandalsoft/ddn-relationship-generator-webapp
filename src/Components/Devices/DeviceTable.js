@@ -2,6 +2,7 @@ import React from "react";
 import { useHistory } from "react-router-dom";
 import { Table } from "antd";
 import { Tooltip } from "antd";
+import Popup from "reactjs-popup";
 import * as R from "ramda";
 import getTimeString from "../../util/get-time-string";
 import { isNulley } from "../../util";
@@ -117,10 +118,10 @@ export default DeviceTable;
 
 const ipAddressRenderer = (text, row, index) => {
   const { lastIpUpdate } = row;
-  const tooltipText = `IP last \n\\nupdated ${getTimeString(lastIpUpdate)}`;
+  const tooltipText = `IP last nupdated ${getTimeString(lastIpUpdate)}`;
   const cellText = text === `NOT_FOUND` ? `-` : text;
   return (
-    <Tooltip mouseEnterDelay={0.7} title={tooltipText}>
+    <Tooltip mouseEnterDelay={0.5} title={tooltipText}>
       <span>{cellText}</span>
     </Tooltip>
   );
@@ -128,11 +129,16 @@ const ipAddressRenderer = (text, row, index) => {
 
 const firstSeenHandler = (text, row, index) => {
   const { firstSeen } = row;
-  const tooltipText = `IP last updated ${getTimeString(firstSeen)}`;
-  const cellText = text === `NOT_FOUND` ? `-` : text;
+  const cellText = `IP last \nupdated <br/>${getTimeString(firstSeen)}`;
+  const tooltipText = text === `NOT_FOUND` ? `-` : getTimeString(firstSeen);
   return (
-    <Tooltip title={tooltipText}>
-      <span>{cellText}</span>
-    </Tooltip>
+    <Popup
+      mouseEnterDelay={500}
+      trigger={<span>{tooltipText}</span>}
+      on="hover"
+      position="top center"
+    >
+      <div>{cellText}</div>
+    </Popup>
   );
 };
