@@ -1,19 +1,30 @@
-import React from "react";
+import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
-import { Table, PageHeader, Icon } from "antd";
+import { Table, PageHeader, Icon, Modal } from "antd";
 import { Tooltip } from "antd";
 import Popup from "reactjs-popup";
 import * as R from "ramda";
 import getTimeString from "../../util/get-time-string";
 import { isNulley } from "../../util";
-
-//  const onRowClick = ({ event, index, rowData }) => {
-//    const device = rowData;
-//    console.log(`rowData: ${JSON.stringify(rowData.macAddress)}`);
-//    history.push(`/devices/${device.macAddress}`, { device });
-//  };
+import DeviceInfo from "./DeviceInfo";
+// import DeviceDetail from "./DeviceDetail";
 
 const DeviceTable = props => {
+  const [state, setState] = useState({
+    isModalVisible: false,
+    selectedDevice: {}
+  });
+
+  const showModal = (setState, record) => {
+    return setState({
+      isModalVisible: true,
+      selectedDevice: record
+    });
+  };
+  const hideModal = setState => {
+    setState({ isModalVisible: false });
+  };
+
   const history = useHistory();
   const devices = R.pathOr(
     [{ id: `no devices yet` }],
@@ -25,6 +36,7 @@ const DeviceTable = props => {
       title: "MAC",
       dataIndex: "macAddress",
       align: `center`,
+      className: `white-background`,
       render: (text, row, index) => (text === `NOT_FOUND` ? `-` : text)
     },
     {
@@ -98,22 +110,36 @@ const DeviceTable = props => {
   return (
     <div>
       <PageHeader
-        style={{ border: "1px solid rgb(235, 237, 240)" }}
+        className="page-header"
         onBack={() => history.push(`/`, { devices })}
         title="Device List"
-        subTitle="All changes in environment are updates in real-time"
+        subTitle="Environment changes update in real-time"
       />
 
+      <Modal
+        title={`Device Details for ${state?.selectedDevice?.macAddress}`}
+        maskAnimation="fade"
+        width="80%"
+        style={{ top: 20 }}
+        visible={state.isModalVisible}
+        centered={true}
+        footer={null}
+        mask={true}
+        onOk={() => hideModal(setState)}
+        onCancel={() => hideModal(setState)}
+      >
+        <DeviceInfo device={state.selectedDevice} />
+      </Modal>
+
       <Table
+        rowClassName="white-background"
         columns={columns}
         dataSource={devices}
         rowKey="id"
         size="small"
-        render={(text, record, index) => {
-          console.log(`index: ${JSON.stringify(index)}`);
-          console.log(`text: ${JSON.stringify(text)}`);
-          console.log(`record: ${JSON.stringify(record)}`);
-        }}
+        onRow={record => ({
+          onClick: () => showModal(setState, record)
+        })}
       />
     </div>
   );

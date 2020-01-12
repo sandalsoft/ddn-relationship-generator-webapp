@@ -87,16 +87,19 @@ const App = () => {
   }, [state]); // useEffect()
 
   return (
-    <div className="app">
-      <Layout>
+    <div id="app">
+      <Layout style={{ background: "#fff", padding: 10 }}>
         <Header style={{ background: "#fff", padding: 10 }}>
           <AppHeader state={state} />
         </Header>
         <Layout>
-          <Sider style={{ height: `100%` }}>
-            <NavSidebar state={state} />
+          <Sider style={{ height: `100%`, background: "#fff" }}>
+            <NavSidebar
+              state={state}
+              style={{ background: "#fff", height: `100%` }}
+            />
           </Sider>
-          <Content style={{ background: "#fff", padding: 10 }}>
+          <Content style={{ background: "#fff", height: `100%` }}>
             <Switch>
               <Route exact path="/app" component={App} />
               <Route exact path="/devices" component={DeviceTable} />
@@ -106,7 +109,7 @@ const App = () => {
             </Switch>
           </Content>
         </Layout>
-        <Footer>FOOTER</Footer>
+        <Footer style={{ background: "#fff", height: `100%` }}>FOOTER</Footer>
       </Layout>
     </div>
   );

@@ -9,7 +9,7 @@ const AppHeader = withRouter(props => {
   };
 
   return (
-    <div className="header">
+    <div className="headerZZZ">
       <div>
         <img style={imgStyle} src={logo} alt="ordr" />
       </div>

@@ -33,6 +33,7 @@ const NavSidebar = props => {
   return (
     <div className="sidebar">
       <Menu
+        className="sidebar"
         defaultSelectedKeys={getCurrentPathKey(history)}
         mode="vertical"
         theme="light"
