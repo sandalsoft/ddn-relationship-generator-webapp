@@ -16,8 +16,8 @@ import API, { graphqlOperation } from "@aws-amplify/api";
 import { onCreateDevice, onUpdateDevice } from "./graphql/subscriptions";
 import { listDevices } from "./graphql/queries";
 
-// import "./POVDashboard.css";
 import "antd/dist/antd.css";
+import "./POVDashboard.css";
 import AppHeader from "./Components/Layout/AppHeader";
 import { Layout } from "antd";
 import NavSidebar from "./Components/Layout/NavSidebar";
@@ -109,7 +109,11 @@ const App = () => {
             </Switch>
           </Content>
         </Layout>
-        <Footer style={{ background: "#fff", height: `100%` }}>FOOTER</Footer>
+        <Footer
+          style={{ background: "#fff", height: `100%`, textAlign: `right` }}
+        >
+          Copyright 2020 Ordr Inc.
+        </Footer>
       </Layout>
     </div>
   );

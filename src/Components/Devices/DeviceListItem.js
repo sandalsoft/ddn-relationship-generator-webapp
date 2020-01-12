@@ -5,7 +5,7 @@ const DeviceListItem = ({ data, index, style }) => {
   const device = data[index];
 
   return (
-    <div className="device-list-item" style={style}>
+    <div>
       {index}
       <Link
         to={{
