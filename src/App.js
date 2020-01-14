@@ -22,6 +22,7 @@ import AppHeader from "./Components/Layout/AppHeader";
 import { Layout } from "antd";
 import NavSidebar from "./Components/Layout/NavSidebar";
 import DeviceTable from "./Components/Devices/DeviceTable";
+import Home from "./Components/Layout/Home";
 
 const { Header, Footer, Sider, Content } = Layout;
 
@@ -101,6 +102,7 @@ const App = () => {
           </Sider>
           <Content style={{ background: "#fff", height: `100%` }}>
             <Switch>
+              <Route exact path="/" component={Home} />
               <Route exact path="/app" component={App} />
               <Route exact path="/devices" component={DeviceTable} />
               <Route exact path="/devices/:id" component={DeviceDetail} />
