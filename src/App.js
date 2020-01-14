@@ -2,7 +2,8 @@ import axios from "axios";
 import * as R from "ramda";
 import PubSub from "@aws-amplify/pubsub";
 import awsconfig from "./aws-exports";
-
+import sizeof from "object-sizeof";
+import prettyBytes from "pretty-bytes";
 import { Route, Switch } from "react-router-dom";
 
 import { Error } from "./Components/Error";
@@ -35,7 +36,7 @@ const ListDeviceSummaryQueryDataPath = [`data`, `listDevices`, `items`];
 
 //***********
 //***********
-const USE_TEST_DATA = true;
+const USE_TEST_DATA = false;
 //***********
 const TestDataUrl = `http://localhost:3000/devices.3102.ignore.json`;
 // const TestDataUrl = `https://dl-pub.s3.us-east-2.amazonaws.com/devices.3102.json`;
@@ -61,7 +62,8 @@ const App = () => {
   };
 
   const [state, dispatch] = useReducer(reducer, {
-    devices: []
+    devices: [],
+    isLoading: true
   });
 
   useEffect(() => {
@@ -147,7 +149,8 @@ const deviceUpdateSub = async (state, dispatch) => {
       );
       dispatch({
         type: `add`,
-        devices: [...state.devices, ...updatedDevice]
+        devices: [...state.devices, ...updatedDevice],
+        isLoading: false
       });
     }
   });
@@ -170,6 +173,7 @@ const fetchData = async (query, params) =>
 
 const fetchAllDevices = async (dispatch, query, nextToken) => {
   try {
+    dispatch({ isLoading: true });
     const limit = 1000;
 
     let params;
@@ -186,20 +190,27 @@ const fetchAllDevices = async (dispatch, query, nextToken) => {
 
     dispatch({
       type: `add`,
-      devices: [...devices]
+      devices: [...devices],
+      isLoading: false
     });
 
     console.log(`Fetching more devices...: ${devices.length}`);
+    const sizeBytes = sizeof(devices);
+    console.log(`Size of fetched data: ${prettyBytes(sizeBytes)}`);
     if (hasMoreDevices(results)) {
       const nextToken = pluckFromResults(
         ListDevicePaginationTokenPath,
         results
       );
+
       const totalDevices = [
         ...devices,
         ...(await fetchAllDevices(dispatch, listDevices, nextToken))
       ];
       console.log(`totalDevices.length: ${totalDevices.length}`);
+      console.log(
+        `sizeof(totalDevices): ${prettyBytes(sizeof(totalDevices))} bytes`
+      );
       return totalDevices;
     } else {
       console.log(`noMoreDevices, returning ${devices.length}`);

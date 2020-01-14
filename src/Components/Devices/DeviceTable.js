@@ -25,11 +25,12 @@ const DeviceTable = props => {
     setState({ isModalVisible: false });
   };
 
-  const devices = R.pathOr(
+  const stateFromHistory = R.pathOr(
     [{ id: `no devices yet` }],
-    [`history`, `location`, `state`, `devices`],
+    [`history`, `location`, `state`],
     props
   );
+  const { devices, isLoading } = stateFromHistory;
 
   const defaultColumnProps = {
     ellipsis: true,
@@ -141,6 +142,7 @@ const DeviceTable = props => {
         tableLayout="auto"
         columns={columns}
         dataSource={devices}
+        Loading={isLoading}
         rowKey="id"
         size="small"
         onRow={record => ({

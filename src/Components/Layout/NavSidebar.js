@@ -56,7 +56,8 @@ const NavSidebar = props => {
               to={{
                 pathname: `/devices`,
                 state: {
-                  devices: state.devices
+                  devices: state.devices,
+                  isLoading: state.isLoading
                 }
               }}
             >
