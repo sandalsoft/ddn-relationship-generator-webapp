@@ -120,8 +120,16 @@
 	function handleFieldDragStart(event: CustomEvent) {
 		draggingConnection = true;
 		startPoint = event.detail.startPoint;
+
 		if (startPoint) {
-			lineStart = { x: startPoint.x, y: startPoint.y };
+			// Get the actual object and field information
+			const objectName = startPoint.object.definition.name;
+			const fieldName = startPoint.field;
+
+			// Calculate coordinates at the right edge of the object for outgoing connections
+			const sourceCoords = getFieldCoordinates(objectName, fieldName, true);
+
+			lineStart = { x: sourceCoords.x, y: sourceCoords.y };
 			lineEnd = lineStart; // Initialize end at start
 		}
 	}
@@ -130,13 +138,12 @@
 	function handleFieldConnectionEnd(event: CustomEvent) {
 		if (!draggingConnection || !startPoint) return;
 
-		const { object: endObj, field: endField, connectRect, svgRect } = event.detail;
+		const { object: endObj, field: endField, fieldRect, svgRect } = event.detail;
 
 		// Only create relationship if this is a different object from the start point
 		if (endObj !== startPoint.object) {
-			// Calculate coordinates relative to the SVG for the line
-			const endX = connectRect.left + connectRect.width / 2 - svgRect.left;
-			const endY = connectRect.top + connectRect.height / 2 - svgRect.top;
+			// Calculate target coordinates at the left edge of the object
+			const targetCoords = getFieldCoordinates(endObj.definition.name, endField, false);
 
 			// Store the pending relationship and show the popup
 			pendingRelationship = {
@@ -312,7 +319,7 @@
 	}
 
 	// Get field coordinates based on the object position and field index
-	function getFieldCoordinates(objectName: string, fieldName: string) {
+	function getFieldCoordinates(objectName: string, fieldName: string, isSource = true) {
 		const objPosition = positions[objectName];
 		if (!objPosition) return { x: 0, y: 0 };
 
@@ -326,30 +333,36 @@
 		// Try to find the actual DOM element for more accurate positioning
 		const objectElement = objectRefs.get(objectName);
 		if (objectElement) {
-			// Find the connect-point for this field
+			// Find the field element for this field
 			const fieldElements = Array.from(objectElement.querySelectorAll('li'));
 			if (fieldIndex < fieldElements.length) {
 				const fieldElement = fieldElements[fieldIndex];
-				const connectPoint = fieldElement.querySelector('.connect-point');
+				const fieldRect = fieldElement.getBoundingClientRect();
+				const objectRect = objectElement.getBoundingClientRect();
+				const svg = document.querySelector('.canvas svg');
 
-				if (connectPoint) {
-					const rect = connectPoint.getBoundingClientRect();
-					const svg = document.querySelector('.canvas svg');
-					if (svg) {
-						const svgRect = svg.getBoundingClientRect();
-						return {
-							x: rect.left + rect.width / 2 - svgRect.left,
-							y: rect.top + rect.height / 2 - svgRect.top
-						};
-					}
+				if (svg) {
+					const svgRect = svg.getBoundingClientRect();
+
+					// Calculate anchor point at the border of the property row
+					// For source fields (outgoing), use the right border
+					// For target fields (incoming), use the left border
+					return {
+						x: isSource
+							? objectRect.right - svgRect.left // Right edge for source
+							: objectRect.left - svgRect.left, // Left edge for target
+						y: fieldRect.top + fieldRect.height / 2 - svgRect.top // Middle of the field row
+					};
 				}
 			}
 		}
 
 		// Fallback to calculated position if DOM elements can't be found
-		// The connect point has a fixed position on the left side of each field row
+		const CARD_WIDTH = 240; // Standard width of the object card
 		return {
-			x: objPosition.x + 18, // Position at the center of the connect-point (18px from left edge)
+			x: isSource
+				? objPosition.x + CARD_WIDTH // Right edge for source
+				: objPosition.x, // Left edge for target
 			y: objPosition.y + 45 + fieldIndex * 31 // Header is ~45px tall, each field row is ~31px tall
 		};
 	}
@@ -419,8 +432,8 @@
 			{@const fromObj = objects.find((o) => o.definition.name === rel.from.object)}
 			{@const toObj = objects.find((o) => o.definition.name === rel.to.object)}
 			{#if fromObj && toObj}
-				{@const fromCoords = getFieldCoordinates(rel.from.object, rel.from.field)}
-				{@const toCoords = getFieldCoordinates(rel.to.object, rel.to.field)}
+				{@const fromCoords = getFieldCoordinates(rel.from.object, rel.from.field, true)}
+				{@const toCoords = getFieldCoordinates(rel.to.object, rel.to.field, false)}
 				{@const objectColor = getObjectColor(rel.from.object)}
 				{@const markerId = `arrow-${idx}`}
 				{@const arrayMarkerId = `arrow-array-${idx}`}
@@ -468,9 +481,12 @@
 
 				<!-- Path with curved connection using object-specific color -->
 				<path
-					d="M {fromCoords.x},{fromCoords.y} C {fromCoords.x +
-						(toCoords.x - fromCoords.x) * 0.5},{fromCoords.y} {fromCoords.x +
-						(toCoords.x - fromCoords.x) * 0.5},{toCoords.y} {toCoords.x},{toCoords.y}"
+					d="M {fromCoords.x},{fromCoords.y} 
+						H {fromCoords.x + 15} 
+						C {fromCoords.x + (toCoords.x - fromCoords.x) * 0.5},{fromCoords.y} 
+						  {fromCoords.x + (toCoords.x - fromCoords.x) * 0.5},{toCoords.y} 
+						  {toCoords.x - 15},{toCoords.y} 
+						H {toCoords.x}"
 					stroke={objectColor}
 					stroke-width="2"
 					fill="none"
@@ -494,10 +510,10 @@
 				</g>
 
 				<!-- Small dot at source point for better visibility -->
-				<circle cx={fromCoords.x} cy={fromCoords.y} r="4" fill={objectColor} />
+				<circle cx={fromCoords.x} cy={fromCoords.y} r="3" fill={objectColor} opacity="0.8" />
 
 				<!-- Small dot at target point for better visibility -->
-				<circle cx={toCoords.x} cy={toCoords.y} r="3" fill={objectColor} opacity="0.7" />
+				<circle cx={toCoords.x} cy={toCoords.y} r="3" fill={objectColor} opacity="0.8" />
 
 				<!-- Debug info showing coordinates -->
 				{#if showDebugInfo}
@@ -514,9 +530,12 @@
 		<!-- Render the temporary dragging line -->
 		{#if draggingConnection}
 			<path
-				d="M {lineStart.x},{lineStart.y} C {lineStart.x +
-					(lineEnd.x - lineStart.x) * 0.5},{lineStart.y} {lineStart.x +
-					(lineEnd.x - lineStart.x) * 0.5},{lineEnd.y} {lineEnd.x},{lineEnd.y}"
+				d="M {lineStart.x},{lineStart.y}
+					H {lineStart.x + 15}
+					C {lineStart.x + (lineEnd.x - lineStart.x) * 0.5},{lineStart.y}
+					  {lineStart.x + (lineEnd.x - lineStart.x) * 0.5},{lineEnd.y}
+					  {lineEnd.x - 15},{lineEnd.y}
+					H {lineEnd.x}"
 				stroke="#999999"
 				stroke-width="2"
 				fill="none"

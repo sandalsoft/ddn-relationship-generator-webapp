@@ -108,27 +108,23 @@
 
 		event.stopPropagation();
 
-		// Get the center point of the field's connect-point for the line
+		// Get the field row element
 		const fieldLi = event.currentTarget as HTMLElement;
-		const connectPoint = fieldLi.querySelector('.connect-point');
+		const fieldRect = fieldLi.getBoundingClientRect();
 
-		if (connectPoint) {
-			const rect = connectPoint.getBoundingClientRect();
+		// Get the canvas SVG element
+		const svg = document.querySelector('.canvas svg');
+		if (!svg) return;
 
-			// Get the canvas SVG element
-			const svg = document.querySelector('.canvas svg');
-			if (!svg) return;
+		const svgRect = svg.getBoundingClientRect();
 
-			const svgRect = svg.getBoundingClientRect();
-
-			// Dispatch a custom event to signal the connection endpoint
-			dispatch('fieldConnectionEnd', {
-				object,
-				field,
-				connectRect: rect,
-				svgRect
-			});
-		}
+		// Dispatch a custom event to signal the connection endpoint
+		dispatch('fieldConnectionEnd', {
+			object,
+			field,
+			fieldRect,
+			svgRect
+		});
 	}
 
 	// Handle delete relationship button click
