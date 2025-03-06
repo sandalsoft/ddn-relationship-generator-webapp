@@ -1,6 +1,7 @@
 <!-- src/lib/components/Canvas.svelte -->
 <script lang="ts">
 	import { createEventDispatcher, tick } from 'svelte';
+	import { fade } from 'svelte/transition';
 	import ObjectCard from './ObjectCard.svelte';
 	import type { ConnectionPoint } from '$lib/types';
 
@@ -24,6 +25,37 @@
 	let showDeletionPopup = false;
 	let relationsToDelete: any[] = [];
 	let deletionPosition = { x: 0, y: 0 };
+
+	// For error notifications
+	let errorMessage = '';
+	let showErrorNotification = false;
+	let errorTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
+	// Show error message
+	function showError(message: string) {
+		errorMessage = message;
+		showErrorNotification = true;
+
+		// Clear any existing timeout
+		if (errorTimeoutId) {
+			clearTimeout(errorTimeoutId);
+		}
+
+		// Auto-hide the error after 5 seconds
+		errorTimeoutId = setTimeout(() => {
+			showErrorNotification = false;
+			errorMessage = '';
+		}, 5000);
+	}
+
+	// Hide error notification
+	function hideError() {
+		showErrorNotification = false;
+		if (errorTimeoutId) {
+			clearTimeout(errorTimeoutId);
+			errorTimeoutId = null;
+		}
+	}
 
 	// Initialize positions for objects if not provided
 	$: {
@@ -190,6 +222,28 @@
 	function selectRelationshipType(type: string) {
 		if (pendingRelationship) {
 			pendingRelationship.type = type;
+
+			// Check if this relationship already exists
+			const isDuplicate = relationships.some(
+				(rel) =>
+					rel.from.object === pendingRelationship.from.object &&
+					rel.from.field === pendingRelationship.from.field &&
+					rel.to.object === pendingRelationship.to.object &&
+					rel.to.field === pendingRelationship.to.field
+			);
+
+			if (isDuplicate) {
+				// Show error notification
+				showError(
+					`Relationship from ${pendingRelationship.from.object}.${pendingRelationship.from.field} to ${pendingRelationship.to.object}.${pendingRelationship.to.field} already exists.`
+				);
+				// Hide popup and clear pending relationship
+				showRelationshipPopup = false;
+				pendingRelationship = null;
+				return;
+			}
+
+			// Add relationship if not a duplicate
 			relationships = [...relationships, pendingRelationship];
 			dispatch('relationshipsUpdate', { relationships });
 
@@ -391,6 +445,19 @@
 					</marker>
 				{/if}
 
+				<!-- Create a smaller directional marker for the path -->
+				<marker
+					id={`direction-${idx}`}
+					viewBox="0 0 6 6"
+					refX="3"
+					refY="3"
+					markerWidth="4"
+					markerHeight="4"
+					orient="auto"
+				>
+					<path d="M 0 0 L 6 3 L 0 6 z" fill={objectColor} />
+				</marker>
+
 				<!-- Path with curved connection using object-specific color -->
 				<path
 					d="M {fromCoords.x},{fromCoords.y} C {fromCoords.x +
@@ -402,6 +469,21 @@
 					marker-end={rel.type === 'Array' ? `url(#${arrayMarkerId})` : `url(#${markerId})`}
 					opacity="0.9"
 				/>
+
+				<!-- Directional arrow in the middle of the path -->
+				{@const midX = fromCoords.x + (toCoords.x - fromCoords.x) * 0.5}
+				{@const midY = fromCoords.y + (toCoords.y - fromCoords.y) * 0.5}
+				{@const angle =
+					Math.atan2(toCoords.y - fromCoords.y, toCoords.x - fromCoords.x) * (180 / Math.PI)}
+
+				<g transform="translate({midX}, {midY}) rotate({angle}, 0, 0)">
+					<path
+						d="M -8,0 L 8,0 M 0,-5 L 8,0 L 0,5"
+						stroke={objectColor}
+						stroke-width="2"
+						fill="none"
+					/>
+				</g>
 
 				<!-- Small dot at source point for better visibility -->
 				<circle cx={fromCoords.x} cy={fromCoords.y} r="3" fill={objectColor} />
@@ -455,6 +537,31 @@
 			</div>
 		{/each}
 	</div>
+
+	<!-- Error notification -->
+	{#if showErrorNotification}
+		<div class="error-notification" transition:fade={{ duration: 200 }}>
+			<div class="error-icon">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="20"
+					height="20"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				>
+					<circle cx="12" cy="12" r="10"></circle>
+					<line x1="12" y1="8" x2="12" y2="12"></line>
+					<line x1="12" y1="16" x2="12.01" y2="16"></line>
+				</svg>
+			</div>
+			<div class="error-message">{errorMessage}</div>
+			<button class="error-close" on:click={hideError} aria-label="Close notification">×</button>
+		</div>
+	{/if}
 
 	<!-- Relationship Type Popup -->
 	{#if showRelationshipPopup}
@@ -739,5 +846,54 @@
 	.color-name {
 		font-family: var(--font-mono);
 		font-size: 11px;
+	}
+
+	.error-notification {
+		position: fixed;
+		bottom: 20px;
+		left: 50%;
+		transform: translateX(-50%);
+		background-color: #fee2e2;
+		color: #b91c1c;
+		border: 1px solid #ef4444;
+		border-radius: var(--radius-md);
+		padding: 12px 16px;
+		display: flex;
+		align-items: center;
+		box-shadow:
+			0 4px 6px -1px rgba(0, 0, 0, 0.1),
+			0 2px 4px -1px rgba(0, 0, 0, 0.06);
+		z-index: 2000;
+		max-width: 500px;
+		width: auto;
+	}
+
+	.error-icon {
+		margin-right: 12px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: #b91c1c;
+	}
+
+	.error-message {
+		flex: 1;
+		font-size: 0.875rem;
+		font-weight: 500;
+	}
+
+	.error-close {
+		background: transparent;
+		border: none;
+		color: #b91c1c;
+		font-size: 20px;
+		cursor: pointer;
+		padding: 0;
+		margin-left: 12px;
+		width: 24px;
+		height: 24px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 </style>
