@@ -86,6 +86,34 @@
       lineEnd = lineStart; // Initialize end at start
     }
   }
+  
+  // Handle direct connection to a field (when the whole field is clicked)
+  function handleFieldConnectionEnd(event: CustomEvent) {
+    if (!draggingConnection || !startPoint) return;
+    
+    const { object: endObj, field: endField, connectRect, svgRect } = event.detail;
+    
+    // Only create relationship if this is a different object from the start point
+    if (endObj !== startPoint.object) {
+      // Calculate coordinates relative to the SVG for the line
+      const endX = connectRect.left + connectRect.width / 2 - svgRect.left;
+      const endY = connectRect.top + connectRect.height / 2 - svgRect.top;
+      
+      // Store the pending relationship and show the popup
+      pendingRelationship = {
+        from: { object: startPoint.object.definition.name, field: startPoint.field },
+        to: { object: endObj.definition.name, field: endField },
+        created: new Date().toISOString(),
+        type: "Object" // Default type
+      };
+      
+      showRelationshipPopup = true;
+    }
+    
+    // End the connection dragging
+    draggingConnection = false;
+    startPoint = null;
+  }
 
   // Update line endpoint during drag
   function onMouseMove(event: MouseEvent) {
@@ -114,7 +142,7 @@
     positions[object.definition.name] = position;
     positions = { ...positions }; // Trigger reactivity
   }
-  
+
   // End drag and create a relationship if dropped on another object's field
   function handleMouseUp(event: MouseEvent) {
     // Handle connection dragging
@@ -325,6 +353,7 @@
       isDraggingConnection={draggingConnection}
       connectedFields={connectedFields[obj.definition.name] || {}}
       on:fieldDragStart={handleFieldDragStart}
+      on:fieldConnectionEnd={handleFieldConnectionEnd}
       on:dragStart={handleDragStart}
       on:dragMove={handleDragMove}
       on:dragEnd={handleDragEnd}

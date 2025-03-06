@@ -5,7 +5,6 @@
   export let object: ObjectDefinition;
   export let position: Position = { x: 0, y: 0 };
   export let isDraggingConnection = false;
-  export let highlightedFields: string[] = [];
   export let connectedFields: { [key: string]: any[] } = {};
 
   const dispatch = createEventDispatcher();
@@ -39,8 +38,13 @@
 
   // Handle card dragging
   function handleMouseDown(event: MouseEvent) {
+    // If we're dragging a connection, don't start dragging the card
+    if (isDraggingConnection) return;
+    
+    // Don't start dragging from control buttons
     if ((event.target as HTMLElement).classList.contains('connect-point') ||
         (event.target as HTMLElement).classList.contains('delete-relation')) return;
+    
     isDragging = true;
     startX = event.clientX - position.x;
     startY = event.clientY - position.y;
@@ -63,7 +67,7 @@
     dispatch('dragMove', { object, position: newPosition });
   }
 
-  function handleMouseUp() {
+  function handleMouseUp(event: MouseEvent) {
     if (isDragging) {
       isDragging = false;
       dispatch('dragEnd', { object, position });
@@ -92,6 +96,36 @@
     };
     
     dispatch('fieldDragStart', { startPoint });
+  }
+  
+  // Handle click on field row when a connection is being dragged
+  function handleFieldClick(event: MouseEvent, field: string) {
+    // Only handle this if we're in connection dragging mode
+    if (!isDraggingConnection) return;
+    
+    event.stopPropagation();
+    
+    // Get the center point of the field's connect-point for the line
+    const fieldLi = event.currentTarget as HTMLElement;
+    const connectPoint = fieldLi.querySelector('.connect-point');
+    
+    if (connectPoint) {
+      const rect = connectPoint.getBoundingClientRect();
+      
+      // Get the canvas SVG element
+      const svg = document.querySelector('.canvas svg');
+      if (!svg) return;
+      
+      const svgRect = svg.getBoundingClientRect();
+      
+      // Dispatch a custom event to signal the connection endpoint
+      dispatch('fieldConnectionEnd', {
+        object,
+        field,
+        connectRect: rect,
+        svgRect
+      });
+    }
   }
   
   // Handle delete relationship button click
@@ -129,11 +163,15 @@
   on:dragstart|preventDefault
   bind:this={cardElement}
   data-name={object.definition.name}
+  class:is-dragging-connection={isDraggingConnection}
 >
   <h3>{object.definition.name}</h3>
   <ul>
     {#each object.definition.fields as field}
-      <li class:highlight={highlightedFields.includes(field.name)}>
+      <li 
+        on:click={e => handleFieldClick(e, field.name)}
+        on:mouseup={e => handleFieldClick(e, field.name)}
+      >
         <div class="field-controls">
           <span
             class="connect-point"
@@ -178,7 +216,22 @@
     display: flex;
     align-items: center;
     margin-bottom: 5px;
+    padding: 3px;
+    border-radius: 4px;
+    transition: background-color 0.15s ease, box-shadow 0.15s ease;
   }
+  
+  /* Highlight row on hover during connection dragging */
+  .is-dragging-connection li:hover {
+    background-color: #c8e6c9; /* Light green background */
+    box-shadow: 0 0 0 2px #4CAF50;
+    cursor: pointer;
+  }
+  
+  .is-dragging-connection li:hover .connect-point {
+    background-color: #2e7d32; /* Darker green */
+  }
+  
   .field-controls {
     display: flex;
     align-items: center;
@@ -219,8 +272,5 @@
   }
   .field {
     flex: 1;
-  }
-  .highlight {
-    background-color: #e0f7fa; /* Light blue for highlighted fields */
   }
 </style>
