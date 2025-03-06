@@ -17,7 +17,7 @@ export function generateRelationshipYaml(relationship: any): string {
     version: 'v1',
     definition: {
       description: relationship.description || `Relationship from ${relationship.from.object} to ${relationship.to.object}`,
-      sourceType: relationship.sourceType || 'object',
+      sourceType: relationship.from.object,
       target: {
         model: {
           name: relationship.to.object,

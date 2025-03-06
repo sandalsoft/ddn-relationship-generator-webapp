@@ -105,8 +105,7 @@
 				to: { object: endObj.definition.name, field: endField },
 				created: new Date().toISOString(),
 				type: 'Object', // Default type
-				description: `Relationship from ${startPoint.object.definition.name} to ${endObj.definition.name}`,
-				sourceType: 'object'
+				description: `Relationship from ${startPoint.object.definition.name} to ${endObj.definition.name}`
 			};
 
 			showRelationshipPopup = true;
@@ -175,8 +174,7 @@
 							to: { object: endObj.definition.name, field: fieldName },
 							created: new Date().toISOString(),
 							type: 'Object', // Default type
-							description: `Relationship from ${startPoint.object.definition.name} to ${endObj.definition.name}`,
-							sourceType: 'object'
+							description: `Relationship from ${startPoint.object.definition.name} to ${endObj.definition.name}`
 						};
 
 						showRelationshipPopup = true;
