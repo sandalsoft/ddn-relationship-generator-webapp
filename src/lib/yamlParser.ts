@@ -1,12 +1,36 @@
 import * as yaml from 'js-yaml';
+import type { ObjectType, Relationship } from './types';
 
-export function parseObjectsFromYaml(yamlString: string): any[] {
+export function parseObjectsFromYaml(yamlString: string): ObjectType[] {
+  if (!yamlString || yamlString.trim() === '') {
+    console.log('Empty YAML input provided');
+    return [];
+  }
+
   try {
+    // Load all documents from the YAML string
     const documents = yaml.loadAll(yamlString) as any[];
-    return documents.map(doc => doc);
+    console.log(`Parsed ${documents.length} YAML documents`);
+
+    // Filter for only ObjectType kinds with valid structure
+    const objectTypes = documents.filter(doc =>
+      doc &&
+      doc.kind === 'ObjectType' &&
+      doc.definition &&
+      doc.definition.name &&
+      Array.isArray(doc.definition.fields)
+    );
+
+    console.log(`Found ${objectTypes.length} valid ObjectType definitions`);
+
+    if (objectTypes.length === 0 && documents.length > 0) {
+      console.warn('No valid ObjectType definitions found in the provided YAML');
+    }
+
+    return objectTypes;
   } catch (error) {
     console.error('Error parsing YAML:', error);
-    return [];
+    throw new Error(`Failed to parse YAML: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -17,7 +41,7 @@ export function generateRelationshipYaml(relationship: any): string {
     version: 'v1',
     definition: {
       description: relationship.description || `Relationship from ${relationship.from.object} to ${relationship.to.object}`,
-      sourceType: relationship.from.object,
+      sourceType: relationship.from.object, // Use source object name as sourceType
       target: {
         model: {
           name: relationship.to.object,

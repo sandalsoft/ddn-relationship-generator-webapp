@@ -4,71 +4,44 @@ export interface Field {
 }
 
 export interface ObjectDefinition {
+  name: string;
+  fields: Field[];
+}
+
+export interface ObjectType {
   kind: string;
   version: string;
-  definition: {
+  definition: ObjectDefinition;
+}
+
+export interface RelationshipTarget {
+  model: {
     name: string;
-    fields: Field[];
+    relationshipType: string;
+  };
+}
+
+export interface RelationshipMapping {
+  source: {
+    fieldPath: { fieldName: string; }[];
+  };
+  target: {
+    modelField: { fieldName: string; }[];
   };
 }
 
 export interface Relationship {
-  kind: string;
-  version: string;
-  definition: {
-    name: string;
-    sourceType: string;
-    target: {
-      model: {
-        name: string;
-        relationshipType: string;
-      };
-    };
-    mapping: {
-      source: { fieldPath: { fieldName: string; }[]; };
-      target: { modelField: { fieldName: string; }[]; };
-    }[];
+  id?: string;
+  from: {
+    object: string;
+    field: string;
   };
-}
-
-export interface Position {
-  x: number;
-  y: number;
-}
-
-// Add this to existing types
-export interface ConnectionPoint {
-  object: ObjectDefinition;
-  field: string;
-  x: number;
-  y: number;
-}
-
-export interface ConnectionPoint {
-  object: ObjectDefinition;
-  field: string;
-  x: number;
-  y: number;
-  distance?: number; // Make distance optional since it's only used temporarily in snapping
-}
-
-export interface ConnectionPoint {
-  object: ObjectDefinition;
-  field: string;
-  x: number;
-  y: number;
-}
-
-export interface ObjectDefinition {
-  definition: {
-    name: string;
-    fields: Field[];
+  to: {
+    object: string;
+    field: string;
   };
-}
-
-export interface Field {
-  name: string;
   type: string;
+  description?: string;
 }
 
 export interface Position {
@@ -77,9 +50,22 @@ export interface Position {
 }
 
 export interface ConnectionPoint {
-  object: ObjectDefinition;
+  object: ObjectType;
   field: string;
   x: number;
   y: number;
+  distance?: number; // Optional for distance calculations during snapping
+}
+
+// Helper type for relationship detection
+export interface RelationshipCheck {
+  from: {
+    object: string;
+    field: string;
+  };
+  to: {
+    object: string;
+    field: string;
+  };
 }
 
