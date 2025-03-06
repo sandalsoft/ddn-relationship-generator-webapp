@@ -30,6 +30,16 @@
 	--radius-sm: 0.25rem;
 	--radius-md: 0.375rem;
 	--radius-lg: 0.5rem;
+
+	/* Highlight colors for relationships */
+	--highlight-blue: #4285f4;
+	--highlight-green: #0f9d58;
+	--highlight-purple: #8b5cf6;
+	--highlight-orange: #f4511e;
+	--highlight-teal: #009688;
+	--highlight-pink: #e91e63;
+	--highlight-amber: #ffc107;
+	--highlight-red: #db4437;
 }
 
 body {

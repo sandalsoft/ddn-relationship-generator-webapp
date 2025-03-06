@@ -292,9 +292,52 @@
 		};
 	}
 
+	// Get a specific color for each object
+	function getObjectColor(objectName: string) {
+		// Use a hash function to consistently map object names to colors
+		const colors = [
+			'var(--highlight-blue, #4285F4)', // Blue
+			'var(--highlight-green, #0F9D58)', // Green
+			'var(--highlight-purple, #8B5CF6)', // Purple
+			'var(--highlight-orange, #F4511E)', // Orange
+			'var(--highlight-teal, #009688)', // Teal
+			'var(--highlight-pink, #E91E63)', // Pink
+			'var(--highlight-amber, #FFC107)', // Amber
+			'var(--highlight-red, #DB4437)' // Red
+		];
+
+		// Simple hash function to map object name to a number
+		let hash = 0;
+		for (let i = 0; i < objectName.length; i++) {
+			hash = (hash << 5) - hash + objectName.charCodeAt(i);
+			hash |= 0; // Convert to 32bit integer
+		}
+
+		// Use absolute value and modulo to get a valid index
+		const index = Math.abs(hash) % colors.length;
+		return colors[index];
+	}
+
+	// Get the color name for marker references
+	function getColorName(objectName: string) {
+		const objectColor = getObjectColor(objectName);
+		const colorNames = ['blue', 'green', 'purple', 'orange', 'teal', 'pink', 'amber', 'red'];
+		for (const name of colorNames) {
+			if (objectColor.toLowerCase().includes(name)) {
+				return name;
+			}
+		}
+		return 'blue'; // Default
+	}
+
 	// Format relationship display text
 	function formatRelationship(rel: any) {
-		return `${rel.from.object}.${rel.from.field} → ${rel.to.object}.${rel.to.field} (${rel.type})`;
+		const colorName = getColorName(rel.from.object);
+		const color = getObjectColor(rel.from.object);
+		return {
+			text: `${rel.from.object}.${rel.from.field} → ${rel.to.object}.${rel.to.field} (${rel.type})`,
+			color
+		};
 	}
 </script>
 
@@ -304,9 +347,9 @@
 	<svg width="100%" height="100%">
 		<!-- Define markers for line ends -->
 		<defs>
-			<!-- Object relationship marker (regular arrow) -->
+			<!-- Create arrows for each color in our palette -->
 			<marker
-				id="arrow-object"
+				id="arrow-blue"
 				viewBox="0 0 10 10"
 				refX="8"
 				refY="5"
@@ -314,12 +357,89 @@
 				markerHeight="6"
 				orient="auto-start-reverse"
 			>
-				<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--primary-color)" />
+				<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--highlight-blue, #4285F4)" />
+			</marker>
+			<marker
+				id="arrow-green"
+				viewBox="0 0 10 10"
+				refX="8"
+				refY="5"
+				markerWidth="6"
+				markerHeight="6"
+				orient="auto-start-reverse"
+			>
+				<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--highlight-green, #0F9D58)" />
+			</marker>
+			<marker
+				id="arrow-purple"
+				viewBox="0 0 10 10"
+				refX="8"
+				refY="5"
+				markerWidth="6"
+				markerHeight="6"
+				orient="auto-start-reverse"
+			>
+				<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--highlight-purple, #8B5CF6)" />
+			</marker>
+			<marker
+				id="arrow-orange"
+				viewBox="0 0 10 10"
+				refX="8"
+				refY="5"
+				markerWidth="6"
+				markerHeight="6"
+				orient="auto-start-reverse"
+			>
+				<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--highlight-orange, #F4511E)" />
+			</marker>
+			<marker
+				id="arrow-teal"
+				viewBox="0 0 10 10"
+				refX="8"
+				refY="5"
+				markerWidth="6"
+				markerHeight="6"
+				orient="auto-start-reverse"
+			>
+				<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--highlight-teal, #009688)" />
+			</marker>
+			<marker
+				id="arrow-pink"
+				viewBox="0 0 10 10"
+				refX="8"
+				refY="5"
+				markerWidth="6"
+				markerHeight="6"
+				orient="auto-start-reverse"
+			>
+				<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--highlight-pink, #E91E63)" />
+			</marker>
+			<marker
+				id="arrow-amber"
+				viewBox="0 0 10 10"
+				refX="8"
+				refY="5"
+				markerWidth="6"
+				markerHeight="6"
+				orient="auto-start-reverse"
+			>
+				<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--highlight-amber, #FFC107)" />
+			</marker>
+			<marker
+				id="arrow-red"
+				viewBox="0 0 10 10"
+				refX="8"
+				refY="5"
+				markerWidth="6"
+				markerHeight="6"
+				orient="auto-start-reverse"
+			>
+				<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--highlight-red, #DB4437)" />
 			</marker>
 
-			<!-- Array relationship marker (double arrow) -->
+			<!-- Double arrow for array relationships -->
 			<marker
-				id="arrow-array"
+				id="arrow-array-blue"
 				viewBox="0 0 16 10"
 				refX="14"
 				refY="5"
@@ -327,7 +447,108 @@
 				markerHeight="6"
 				orient="auto-start-reverse"
 			>
-				<path d="M 0 0 L 10 5 L 0 10 z M 6 0 L 16 5 L 6 10 z" fill="var(--accent-color)" />
+				<path
+					d="M 0 0 L 10 5 L 0 10 z M 6 0 L 16 5 L 6 10 z"
+					fill="var(--highlight-blue, #4285F4)"
+				/>
+			</marker>
+			<marker
+				id="arrow-array-green"
+				viewBox="0 0 16 10"
+				refX="14"
+				refY="5"
+				markerWidth="8"
+				markerHeight="6"
+				orient="auto-start-reverse"
+			>
+				<path
+					d="M 0 0 L 10 5 L 0 10 z M 6 0 L 16 5 L 6 10 z"
+					fill="var(--highlight-green, #0F9D58)"
+				/>
+			</marker>
+			<marker
+				id="arrow-array-purple"
+				viewBox="0 0 16 10"
+				refX="14"
+				refY="5"
+				markerWidth="8"
+				markerHeight="6"
+				orient="auto-start-reverse"
+			>
+				<path
+					d="M 0 0 L 10 5 L 0 10 z M 6 0 L 16 5 L 6 10 z"
+					fill="var(--highlight-purple, #8B5CF6)"
+				/>
+			</marker>
+			<marker
+				id="arrow-array-orange"
+				viewBox="0 0 16 10"
+				refX="14"
+				refY="5"
+				markerWidth="8"
+				markerHeight="6"
+				orient="auto-start-reverse"
+			>
+				<path
+					d="M 0 0 L 10 5 L 0 10 z M 6 0 L 16 5 L 6 10 z"
+					fill="var(--highlight-orange, #F4511E)"
+				/>
+			</marker>
+			<marker
+				id="arrow-array-teal"
+				viewBox="0 0 16 10"
+				refX="14"
+				refY="5"
+				markerWidth="8"
+				markerHeight="6"
+				orient="auto-start-reverse"
+			>
+				<path
+					d="M 0 0 L 10 5 L 0 10 z M 6 0 L 16 5 L 6 10 z"
+					fill="var(--highlight-teal, #009688)"
+				/>
+			</marker>
+			<marker
+				id="arrow-array-pink"
+				viewBox="0 0 16 10"
+				refX="14"
+				refY="5"
+				markerWidth="8"
+				markerHeight="6"
+				orient="auto-start-reverse"
+			>
+				<path
+					d="M 0 0 L 10 5 L 0 10 z M 6 0 L 16 5 L 6 10 z"
+					fill="var(--highlight-pink, #E91E63)"
+				/>
+			</marker>
+			<marker
+				id="arrow-array-amber"
+				viewBox="0 0 16 10"
+				refX="14"
+				refY="5"
+				markerWidth="8"
+				markerHeight="6"
+				orient="auto-start-reverse"
+			>
+				<path
+					d="M 0 0 L 10 5 L 0 10 z M 6 0 L 16 5 L 6 10 z"
+					fill="var(--highlight-amber, #FFC107)"
+				/>
+			</marker>
+			<marker
+				id="arrow-array-red"
+				viewBox="0 0 16 10"
+				refX="14"
+				refY="5"
+				markerWidth="8"
+				markerHeight="6"
+				orient="auto-start-reverse"
+			>
+				<path
+					d="M 0 0 L 10 5 L 0 10 z M 6 0 L 16 5 L 6 10 z"
+					fill="var(--highlight-red, #DB4437)"
+				/>
 			</marker>
 
 			<!-- Temporary connection marker -->
@@ -363,18 +584,25 @@
 			{#if fromObj && toObj}
 				{@const fromCoords = getFieldCoordinates(rel.from.object, rel.from.field)}
 				{@const toCoords = getFieldCoordinates(rel.to.object, rel.to.field)}
+				{@const objectColor = getObjectColor(rel.from.object)}
+				{@const colorName = getColorName(rel.from.object)}
 
-				<!-- Path with curved connection -->
+				<!-- Path with curved connection using object-specific color -->
 				<path
 					d="M {fromCoords.x},{fromCoords.y} C {fromCoords.x +
 						(toCoords.x - fromCoords.x) * 0.5},{fromCoords.y} {fromCoords.x +
 						(toCoords.x - fromCoords.x) * 0.5},{toCoords.y} {toCoords.x},{toCoords.y}"
-					stroke={rel.type === 'Array' ? 'var(--accent-color)' : 'var(--primary-color)'}
+					stroke={objectColor}
 					stroke-width="2"
 					fill="none"
-					marker-end={rel.type === 'Array' ? 'url(#arrow-array)' : 'url(#arrow-object)'}
-					opacity="0.8"
+					marker-end={rel.type === 'Array'
+						? `url(#arrow-array-${colorName})`
+						: `url(#arrow-${colorName})`}
+					opacity="0.9"
 				/>
+
+				<!-- Small dot at source point for better visibility -->
+				<circle cx={fromCoords.x} cy={fromCoords.y} r="3" fill={objectColor} />
 			{/if}
 		{/each}
 
@@ -391,6 +619,9 @@
 				marker-end="url(#arrow-temp)"
 				opacity="0.6"
 			/>
+
+			<!-- Small dot at start point for the dragging line -->
+			<circle cx={lineStart.x} cy={lineStart.y} r="3" fill="var(--text-light)" />
 		{/if}
 	</svg>
 
@@ -457,8 +688,14 @@
 			<h4 id="deletionHeading">Select relationship to delete:</h4>
 			<ul>
 				{#each relationsToDelete as rel}
-					<li on:click={() => deleteRelationship(rel)} role="button" tabindex="0">
-						{formatRelationship(rel)}
+					{@const formattedRel = formatRelationship(rel)}
+					<li
+						on:click={() => deleteRelationship(rel)}
+						role="button"
+						tabindex="0"
+						style="border-left: 3px solid {formattedRel.color}; padding-left: 0.8rem;"
+					>
+						{formattedRel.text}
 					</li>
 				{/each}
 			</ul>
