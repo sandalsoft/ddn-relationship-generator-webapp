@@ -6,6 +6,7 @@
   export let position: Position = { x: 0, y: 0 };
   export let isDraggingConnection = false;
   export let highlightedFields: string[] = [];
+  export let connectedFields: { [key: string]: any[] } = {};
 
   const dispatch = createEventDispatcher();
   let isDragging = false;
@@ -38,7 +39,8 @@
 
   // Handle card dragging
   function handleMouseDown(event: MouseEvent) {
-    if ((event.target as HTMLElement).classList.contains('connect-point')) return;
+    if ((event.target as HTMLElement).classList.contains('connect-point') ||
+        (event.target as HTMLElement).classList.contains('delete-relation')) return;
     isDragging = true;
     startX = event.clientX - position.x;
     startY = event.clientY - position.y;
@@ -91,6 +93,30 @@
     
     dispatch('fieldDragStart', { startPoint });
   }
+  
+  // Handle delete relationship button click
+  function deleteRelationship(event: MouseEvent, fieldName: string) {
+    event.stopPropagation();
+    
+    // Get the position for the popup if needed
+    const target = event.target as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    const position = {
+      x: rect.right + 5,
+      y: rect.top
+    };
+    
+    dispatch('deleteRelationship', {
+      objectName: object.definition.name,
+      fieldName,
+      position
+    });
+  }
+  
+  // Check if a field has relationships
+  function hasRelationships(fieldName: string): boolean {
+    return !!connectedFields[fieldName] && connectedFields[fieldName].length > 0;
+  }
 </script>
 
 <svelte:window on:mousemove={handleMouseMove} on:mouseup={handleMouseUp} />
@@ -108,11 +134,21 @@
   <ul>
     {#each object.definition.fields as field}
       <li class:highlight={highlightedFields.includes(field.name)}>
-        <span
-          class="connect-point"
-          on:mousedown|stopPropagation={e => startFieldDrag(e, field.name)}
-          class:dragging={isDraggingConnection}
-        >+</span>
+        <div class="field-controls">
+          <span
+            class="connect-point"
+            on:mousedown|stopPropagation={e => startFieldDrag(e, field.name)}
+            class:dragging={isDraggingConnection}
+          >+</span>
+          
+          {#if hasRelationships(field.name)}
+            <span 
+              class="delete-relation"
+              on:click|stopPropagation={e => deleteRelationship(e, field.name)}
+              title="Delete relationship"
+            >×</span>
+          {/if}
+        </div>
         <span class="field">{field.name}: {field.type}</span>
       </li>
     {/each}
@@ -143,10 +179,14 @@
     align-items: center;
     margin-bottom: 5px;
   }
+  .field-controls {
+    display: flex;
+    align-items: center;
+    margin-right: 5px;
+  }
   .connect-point {
     width: 16px;
     height: 16px;
-    margin-right: 5px;
     background: #4CAF50;
     color: white;
     text-align: center;
@@ -154,12 +194,28 @@
     cursor: pointer;
     line-height: 16px;
     font-size: 12px;
+    margin-right: 2px;
   }
   .connect-point:hover {
     background: #45a049;
   }
   .connect-point.dragging {
     background: #666;
+  }
+  .delete-relation {
+    width: 16px;
+    height: 16px;
+    background: #f44336;
+    color: white;
+    text-align: center;
+    border-radius: 50%;
+    cursor: pointer;
+    line-height: 14px;
+    font-size: 16px;
+    font-weight: bold;
+  }
+  .delete-relation:hover {
+    background: #d32f2f;
   }
   .field {
     flex: 1;
