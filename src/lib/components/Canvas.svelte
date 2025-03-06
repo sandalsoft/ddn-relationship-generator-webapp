@@ -294,28 +294,20 @@
 
 	// Get a specific color for each object
 	function getObjectColor(objectName: string) {
-		// Direct color values without CSS variables
-		const colors = [
-			'#4285F4', // Blue
-			'#0F9D58', // Green
-			'#8B5CF6', // Purple
-			'#F4511E', // Orange
-			'#009688', // Teal
-			'#E91E63', // Pink
-			'#FFC107', // Amber
-			'#DB4437' // Red
-		];
+		// Assign specific colors directly based on object name
+		const colorMap: { [key: string]: string } = {
+			Customers: '#4285F4', // Blue
+			Transactions: '#0F9D58', // Green
+			Orders: '#8B5CF6', // Purple
+			Products: '#F4511E', // Orange
+			Users: '#009688', // Teal
+			Profiles: '#E91E63', // Pink
+			Items: '#FFC107', // Amber
+			Categories: '#DB4437' // Red
+		};
 
-		// Simple hash function to map object name to a number
-		let hash = 0;
-		for (let i = 0; i < objectName.length; i++) {
-			hash = (hash << 5) - hash + objectName.charCodeAt(i);
-			hash |= 0; // Convert to 32bit integer
-		}
-
-		// Use absolute value and modulo to get a valid index
-		const index = Math.abs(hash) % colors.length;
-		return colors[index];
+		// Return color for known objects or default to a distinguishable color
+		return colorMap[objectName] || `hsl(${objectName.length * 40}, 70%, 50%)`;
 	}
 
 	// Format relationship display text
@@ -361,17 +353,19 @@
 		<rect width="100%" height="100%" fill="url(#grid)" />
 
 		<!-- Render existing relationships -->
-		{#each relationships as rel}
+		{#each relationships as rel, idx}
 			{@const fromObj = objects.find((o) => o.definition.name === rel.from.object)}
 			{@const toObj = objects.find((o) => o.definition.name === rel.to.object)}
 			{#if fromObj && toObj}
 				{@const fromCoords = getFieldCoordinates(rel.from.object, rel.from.field)}
 				{@const toCoords = getFieldCoordinates(rel.to.object, rel.to.field)}
 				{@const objectColor = getObjectColor(rel.from.object)}
+				{@const markerId = `arrow-${idx}`}
+				{@const arrayMarkerId = `arrow-array-${idx}`}
 
 				<!-- Create a marker for this relationship's arrow -->
 				<marker
-					id={`arrow-${rel.from.object}-${rel.from.field}-${rel.to.object}-${rel.to.field}`}
+					id={markerId}
 					viewBox="0 0 10 10"
 					refX="8"
 					refY="5"
@@ -385,7 +379,7 @@
 				<!-- Create a marker for array relationships if needed -->
 				{#if rel.type === 'Array'}
 					<marker
-						id={`arrow-array-${rel.from.object}-${rel.from.field}-${rel.to.object}-${rel.to.field}`}
+						id={arrayMarkerId}
 						viewBox="0 0 16 10"
 						refX="14"
 						refY="5"
@@ -405,9 +399,7 @@
 					stroke={objectColor}
 					stroke-width="2"
 					fill="none"
-					marker-end={rel.type === 'Array'
-						? `url(#arrow-array-${rel.from.object}-${rel.from.field}-${rel.to.object}-${rel.to.field})`
-						: `url(#arrow-${rel.from.object}-${rel.from.field}-${rel.to.object}-${rel.to.field})`}
+					marker-end={rel.type === 'Array' ? `url(#${arrayMarkerId})` : `url(#${markerId})`}
 					opacity="0.9"
 				/>
 
@@ -451,6 +443,18 @@
 			on:deleteRelationship={handleDeleteRelationship}
 		/>
 	{/each}
+
+	<!-- Color debug info -->
+	<div class="color-debug">
+		<div class="color-debug-title">Color assignments:</div>
+		{#each objects as obj}
+			{@const objColor = getObjectColor(obj.definition.name)}
+			<div class="color-item">
+				<span class="color-swatch" style="background-color: {objColor};"></span>
+				<span class="color-name">{obj.definition.name}: {objColor}</span>
+			</div>
+		{/each}
+	</div>
 
 	<!-- Relationship Type Popup -->
 	{#if showRelationshipPopup}
@@ -694,5 +698,46 @@
 
 	.cancel-button:hover {
 		background: var(--card-border);
+	}
+
+	.color-debug {
+		position: fixed;
+		top: 10px;
+		right: 10px;
+		background: rgba(255, 255, 255, 0.95);
+		border: 1px solid var(--card-border);
+		border-radius: var(--radius-md);
+		padding: 10px;
+		font-size: 12px;
+		z-index: 1000;
+		box-shadow: var(--card-shadow);
+		max-width: 300px;
+	}
+
+	.color-debug-title {
+		font-weight: bold;
+		margin-bottom: 6px;
+		border-bottom: 1px solid var(--card-border);
+		padding-bottom: 4px;
+	}
+
+	.color-item {
+		display: flex;
+		align-items: center;
+		margin-bottom: 4px;
+	}
+
+	.color-swatch {
+		display: inline-block;
+		width: 16px;
+		height: 16px;
+		border-radius: 3px;
+		margin-right: 6px;
+		border: 1px solid rgba(0, 0, 0, 0.1);
+	}
+
+	.color-name {
+		font-family: var(--font-mono);
+		font-size: 11px;
 	}
 </style>
