@@ -34,6 +34,47 @@ export function parseObjectsFromYaml(yamlString: string): ObjectType[] {
   }
 }
 
+/**
+ * Filters the input YAML string to include only objects with kind: ObjectType
+ * and formats them back to YAML with document separators.
+ */
+export function filterObjectTypeYaml(yamlString: string): string {
+  if (!yamlString || yamlString.trim() === '') {
+    return '';
+  }
+
+  try {
+    // Parse the YAML content
+    const documents = yaml.loadAll(yamlString) as any[];
+
+    // Filter for only ObjectType kinds
+    const objectTypes = documents.filter(doc =>
+      doc &&
+      doc.kind === 'ObjectType' &&
+      doc.definition &&
+      doc.definition.name &&
+      Array.isArray(doc.definition.fields)
+    );
+
+    if (objectTypes.length === 0) {
+      return ''; // No ObjectType documents found
+    }
+
+    // Convert the filtered objects back to YAML with document separators
+    return objectTypes.map(obj =>
+      yaml.dump(obj, {
+        noRefs: true,
+        indent: 2,
+        lineWidth: -1,
+        flowLevel: -1
+      })
+    ).join('---\n');
+  } catch (error) {
+    console.error('Error filtering YAML:', error);
+    return yamlString; // Return original on error
+  }
+}
+
 export function generateRelationshipYaml(relationship: any): string {
   // Transform from the internal format to the required output format
   const formattedRelationship = {

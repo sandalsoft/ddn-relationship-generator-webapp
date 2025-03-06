@@ -1,23 +1,79 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
+	import { createEventDispatcher, onMount } from 'svelte';
+	import { filterObjectTypeYaml } from '$lib/yamlParser';
+
 	const dispatch = createEventDispatcher();
 
 	export let inputYaml: string;
 	export let outputYaml: string;
+
+	// Flag to control if we're showing filtered view or original
+	let showFiltered = true;
+
+	// Get the filtered YAML for display
+	$: displayYaml = showFiltered ? filterObjectTypeYaml(inputYaml) || inputYaml : inputYaml;
 
 	// Dispatch input changes to the parent
 	function handleInput(event: Event) {
 		const target = event.target as HTMLTextAreaElement;
 		dispatch('inputChange', { yaml: target.value });
 	}
+
+	// Clear the input
+	function clearInput() {
+		dispatch('inputChange', { yaml: '' });
+	}
+
+	// Toggle between filtered and full view
+	function toggleFilter() {
+		showFiltered = !showFiltered;
+	}
+
+	// Copy output to clipboard
+	function copyToClipboard() {
+		if (navigator.clipboard && outputYaml) {
+			navigator.clipboard
+				.writeText(outputYaml)
+				.then(() => {
+					// Show success feedback (could be enhanced with a toast)
+					console.log('Copied to clipboard');
+				})
+				.catch((err) => {
+					console.error('Failed to copy: ', err);
+				});
+		}
+	}
 </script>
 
 <div class="yaml-io">
 	<div class="yaml-section input-section">
 		<div class="yaml-header">
-			<h3>Input Objects</h3>
+			<h3>Input Objects {showFiltered ? '(ObjectType only)' : '(All)'}</h3>
 			<div class="yaml-controls">
-				<button class="icon-button" title="Clear">
+				<button
+					class="icon-button"
+					title={showFiltered ? 'Show All Objects' : 'Show ObjectType Only'}
+					on:click={toggleFilter}
+				>
+					<span class="visually-hidden"
+						>{showFiltered ? 'Show All Objects' : 'Show ObjectType Only'}</span
+					>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="16"
+						height="16"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+						<circle cx="12" cy="12" r="3"></circle>
+					</svg>
+				</button>
+				<button class="icon-button" title="Clear" on:click={clearInput}>
 					<span class="visually-hidden">Clear</span>
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
@@ -39,6 +95,11 @@
 		</div>
 		<div class="yaml-content">
 			<textarea bind:value={inputYaml} on:input={handleInput}></textarea>
+			{#if showFiltered && displayYaml !== inputYaml}
+				<div class="filter-badge">
+					<span>Filtered view active</span>
+				</div>
+			{/if}
 		</div>
 	</div>
 
@@ -46,7 +107,7 @@
 		<div class="yaml-header">
 			<h3>Generated Relationships</h3>
 			<div class="yaml-controls">
-				<button class="icon-button" title="Copy to clipboard">
+				<button class="icon-button" title="Copy to clipboard" on:click={copyToClipboard}>
 					<span class="visually-hidden">Copy to clipboard</span>
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
@@ -132,6 +193,7 @@
 		overflow: auto;
 		padding: 1rem;
 		background-color: var(--card-bg);
+		position: relative;
 	}
 
 	textarea {
@@ -175,5 +237,19 @@
 	.input-section,
 	.output-section {
 		border-bottom: 1px solid var(--card-border);
+	}
+
+	.filter-badge {
+		position: absolute;
+		bottom: 10px;
+		right: 10px;
+		background-color: var(--primary-light);
+		color: var(--primary-dark);
+		border-radius: var(--radius-md);
+		padding: 0.25rem 0.5rem;
+		font-size: 0.75rem;
+		font-weight: 500;
+		opacity: 0.8;
+		pointer-events: none;
 	}
 </style>
