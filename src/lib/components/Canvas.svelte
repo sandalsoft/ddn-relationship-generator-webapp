@@ -1,6 +1,6 @@
 <!-- src/lib/components/Canvas.svelte -->
 <script lang="ts">
-	import { createEventDispatcher, tick } from 'svelte';
+	import { createEventDispatcher, tick, onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import ObjectCard from './ObjectCard.svelte';
 	import type { ConnectionPoint } from '$lib/types';
@@ -30,6 +30,13 @@
 	let errorMessage = '';
 	let showErrorNotification = false;
 	let errorTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
+	let showDebugInfo = false; // Added debug info flag
+
+	// Toggle debug info
+	function toggleDebugInfo() {
+		showDebugInfo = !showDebugInfo;
+	}
 
 	// Show error message
 	function showError(message: string) {
@@ -340,9 +347,10 @@
 		}
 
 		// Fallback to calculated position if DOM elements can't be found
+		// The connect point has a fixed position on the left side of each field row
 		return {
-			x: objPosition.x + 16, // Position of connect point from left
-			y: objPosition.y + 60 + fieldIndex * 27 // 60px is approximate vertical offset to first field, 27px between fields
+			x: objPosition.x + 18, // Position at the center of the connect-point (18px from left edge)
+			y: objPosition.y + 45 + fieldIndex * 31 // Header is ~45px tall, each field row is ~31px tall
 		};
 	}
 
@@ -486,7 +494,20 @@
 				</g>
 
 				<!-- Small dot at source point for better visibility -->
-				<circle cx={fromCoords.x} cy={fromCoords.y} r="3" fill={objectColor} />
+				<circle cx={fromCoords.x} cy={fromCoords.y} r="4" fill={objectColor} />
+
+				<!-- Small dot at target point for better visibility -->
+				<circle cx={toCoords.x} cy={toCoords.y} r="3" fill={objectColor} opacity="0.7" />
+
+				<!-- Debug info showing coordinates -->
+				{#if showDebugInfo}
+					<text x={fromCoords.x + 5} y={fromCoords.y - 5} font-size="10" fill={objectColor}>
+						({fromCoords.x.toFixed(0)},{fromCoords.y.toFixed(0)})
+					</text>
+					<text x={toCoords.x + 5} y={toCoords.y - 5} font-size="10" fill={objectColor}>
+						({toCoords.x.toFixed(0)},{toCoords.y.toFixed(0)})
+					</text>
+				{/if}
 			{/if}
 		{/each}
 
@@ -526,8 +547,15 @@
 		/>
 	{/each}
 
+	<!-- Debug toggle button -->
+	<div class="debug-toggle">
+		<button on:click={toggleDebugInfo} class="debug-button">
+			{showDebugInfo ? 'Hide Debug Info' : 'Show Debug Info'}
+		</button>
+	</div>
+
 	<!-- Color debug info -->
-	<div class="color-debug">
+	<div class="color-debug" class:active={showDebugInfo}>
 		<div class="color-debug-title">Color assignments:</div>
 		{#each objects as obj}
 			{@const objColor = getObjectColor(obj.definition.name)}
@@ -819,6 +847,11 @@
 		z-index: 1000;
 		box-shadow: var(--card-shadow);
 		max-width: 300px;
+		display: none; /* Hide by default */
+	}
+
+	.color-debug.active {
+		display: block; /* Show when active */
 	}
 
 	.color-debug-title {
@@ -895,5 +928,28 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
+	}
+
+	.debug-toggle {
+		position: fixed;
+		top: 10px;
+		left: 10px;
+		z-index: 1000;
+	}
+
+	.debug-button {
+		background: var(--bg-color);
+		color: var(--text-color);
+		border: 1px solid var(--card-border);
+		border-radius: var(--radius-sm);
+		padding: 0.5rem 1rem;
+		font-size: 0.9rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all var(--transition-speed) ease;
+	}
+
+	.debug-button:hover {
+		background: var(--card-border);
 	}
 </style>
