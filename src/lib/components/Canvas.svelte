@@ -304,18 +304,57 @@
 	<svg width="100%" height="100%">
 		<!-- Define markers for line ends -->
 		<defs>
+			<!-- Object relationship marker (regular arrow) -->
 			<marker
-				id="arrow"
+				id="arrow-object"
 				viewBox="0 0 10 10"
-				refX="5"
+				refX="8"
 				refY="5"
-				markerWidth="4"
-				markerHeight="4"
+				markerWidth="6"
+				markerHeight="6"
 				orient="auto-start-reverse"
 			>
-				<path d="M 0 0 L 10 5 L 0 10 z" fill="black" />
+				<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--primary-color)" />
+			</marker>
+
+			<!-- Array relationship marker (double arrow) -->
+			<marker
+				id="arrow-array"
+				viewBox="0 0 16 10"
+				refX="14"
+				refY="5"
+				markerWidth="8"
+				markerHeight="6"
+				orient="auto-start-reverse"
+			>
+				<path d="M 0 0 L 10 5 L 0 10 z M 6 0 L 16 5 L 6 10 z" fill="var(--accent-color)" />
+			</marker>
+
+			<!-- Temporary connection marker -->
+			<marker
+				id="arrow-temp"
+				viewBox="0 0 10 10"
+				refX="8"
+				refY="5"
+				markerWidth="6"
+				markerHeight="6"
+				orient="auto-start-reverse"
+			>
+				<path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-light)" />
 			</marker>
 		</defs>
+
+		<!-- Grid for visual reference (subtle) -->
+		<pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
+			<path
+				d="M 50 0 L 0 0 0 50"
+				fill="none"
+				stroke="var(--card-border)"
+				stroke-width="0.5"
+				opacity="0.5"
+			/>
+		</pattern>
+		<rect width="100%" height="100%" fill="url(#grid)" />
 
 		<!-- Render existing relationships -->
 		{#each relationships as rel}
@@ -324,28 +363,33 @@
 			{#if fromObj && toObj}
 				{@const fromCoords = getFieldCoordinates(rel.from.object, rel.from.field)}
 				{@const toCoords = getFieldCoordinates(rel.to.object, rel.to.field)}
-				<line
-					x1={fromCoords.x}
-					y1={fromCoords.y}
-					x2={toCoords.x}
-					y2={toCoords.y}
-					stroke="black"
+
+				<!-- Path with curved connection -->
+				<path
+					d="M {fromCoords.x},{fromCoords.y} C {fromCoords.x +
+						(toCoords.x - fromCoords.x) * 0.5},{fromCoords.y} {fromCoords.x +
+						(toCoords.x - fromCoords.x) * 0.5},{toCoords.y} {toCoords.x},{toCoords.y}"
+					stroke={rel.type === 'Array' ? 'var(--accent-color)' : 'var(--primary-color)'}
 					stroke-width="2"
-					marker-end="url(#arrow)"
+					fill="none"
+					marker-end={rel.type === 'Array' ? 'url(#arrow-array)' : 'url(#arrow-object)'}
+					opacity="0.8"
 				/>
 			{/if}
 		{/each}
 
 		<!-- Render the temporary dragging line -->
 		{#if draggingConnection}
-			<line
-				x1={lineStart.x}
-				y1={lineStart.y}
-				x2={lineEnd.x}
-				y2={lineEnd.y}
-				stroke="gray"
+			<path
+				d="M {lineStart.x},{lineStart.y} C {lineStart.x +
+					(lineEnd.x - lineStart.x) * 0.5},{lineStart.y} {lineStart.x +
+					(lineEnd.x - lineStart.x) * 0.5},{lineEnd.y} {lineEnd.x},{lineEnd.y}"
+				stroke="var(--text-light)"
 				stroke-width="2"
-				stroke-dasharray="5"
+				fill="none"
+				stroke-dasharray="4"
+				marker-end="url(#arrow-temp)"
+				opacity="0.6"
 			/>
 		{/if}
 	</svg>
@@ -370,23 +414,50 @@
 	<!-- Relationship Type Popup -->
 	{#if showRelationshipPopup}
 		<div class="popup-overlay" on:click={cancelRelationship}>
-			<div class="popup" on:click|stopPropagation>
-				<h3>Relationship Type</h3>
+			<div
+				class="popup"
+				on:click|stopPropagation
+				role="dialog"
+				aria-labelledby="relationshipTypeHeading"
+			>
+				<h3 id="relationshipTypeHeading">Select Relationship Type</h3>
+				<p class="popup-description">
+					Creating a relationship from
+					<span class="highlight"
+						>{pendingRelationship?.from.object}.{pendingRelationship?.from.field}</span
+					>
+					to
+					<span class="highlight"
+						>{pendingRelationship?.to.object}.{pendingRelationship?.to.field}</span
+					>
+				</p>
 				<div class="popup-options">
-					<button on:click={() => selectRelationshipType('Object')}> Object (1 to 1) </button>
-					<button on:click={() => selectRelationshipType('Array')}> Array (1 to Many) </button>
+					<button on:click={() => selectRelationshipType('Object')} class="primary">
+						<span class="relationship-icon">1:1</span>
+						<span>Object (One to One)</span>
+					</button>
+					<button on:click={() => selectRelationshipType('Array')} class="secondary">
+						<span class="relationship-icon">1:n</span>
+						<span>Array (One to Many)</span>
+					</button>
 				</div>
+				<button class="cancel-button" on:click={cancelRelationship}> Cancel </button>
 			</div>
 		</div>
 	{/if}
 
 	<!-- Relationship Deletion Popup -->
 	{#if showDeletionPopup}
-		<div class="deletion-popup" style="top: {deletionPosition.y}px; left: {deletionPosition.x}px;">
-			<h4>Select relationship to delete:</h4>
+		<div
+			class="deletion-popup"
+			style="top: {deletionPosition.y}px; left: {deletionPosition.x}px;"
+			role="dialog"
+			aria-labelledby="deletionHeading"
+		>
+			<h4 id="deletionHeading">Select relationship to delete:</h4>
 			<ul>
 				{#each relationsToDelete as rel}
-					<li on:click={() => deleteRelationship(rel)}>
+					<li on:click={() => deleteRelationship(rel)} role="button" tabindex="0">
 						{formatRelationship(rel)}
 					</li>
 				{/each}
@@ -401,9 +472,13 @@
 		position: relative;
 		width: 100%;
 		height: 100%;
-		background: #f5f5f5;
+		background: var(--bg-color);
+		background-image: radial-gradient(var(--card-border) 1px, transparent 0);
+		background-size: 20px 20px;
+		background-position: -10px -10px;
 		overflow: hidden;
 	}
+
 	svg {
 		position: absolute;
 		top: 0;
@@ -419,93 +494,158 @@
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background: rgba(0, 0, 0, 0.5);
+		background: rgba(0, 0, 0, 0.4);
+		backdrop-filter: blur(2px);
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		z-index: 10;
+		z-index: 100;
+		animation: fadeIn 0.2s ease;
+		role: dialog;
+		aria-modal: true;
+	}
+
+	@keyframes fadeIn {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
+	}
+
+	@keyframes scaleIn {
+		from {
+			transform: scale(0.95);
+			opacity: 0;
+		}
+		to {
+			transform: scale(1);
+			opacity: 1;
+		}
 	}
 
 	.popup {
-		background: white;
-		border-radius: 8px;
-		padding: 20px;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-		min-width: 300px;
+		background: var(--card-bg);
+		border-radius: var(--radius-md);
+		padding: 1.5rem;
+		box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+		min-width: 320px;
+		max-width: 90%;
 		text-align: center;
+		animation: scaleIn 0.2s ease;
 	}
 
 	.popup h3 {
 		margin-top: 0;
-		margin-bottom: 16px;
+		margin-bottom: 1.25rem;
+		color: var(--text-color);
+		font-size: 1.25rem;
 	}
 
 	.popup-options {
 		display: flex;
 		justify-content: space-between;
-		gap: 10px;
+		gap: 1rem;
 	}
 
 	.popup-options button {
 		flex: 1;
-		padding: 10px;
-		background: #4caf50;
-		color: white;
-		border: none;
-		border-radius: 4px;
-		cursor: pointer;
-	}
-
-	.popup-options button:hover {
-		background: #45a049;
+		padding: 0.75rem 1rem;
+		font-size: 0.95rem;
+		font-weight: 500;
 	}
 
 	.deletion-popup {
 		position: absolute;
-		background: white;
-		border-radius: 4px;
-		padding: 10px;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-		z-index: 5;
+		background: var(--card-bg);
+		border-radius: var(--radius-md);
+		padding: 1rem;
+		box-shadow: var(--card-shadow);
+		z-index: 10;
 		min-width: 250px;
+		max-width: 300px;
+		animation: scaleIn 0.2s ease;
 	}
 
 	.deletion-popup h4 {
 		margin-top: 0;
-		margin-bottom: 8px;
-		font-size: 14px;
+		margin-bottom: 0.75rem;
+		font-size: 0.9rem;
+		color: var(--text-color);
 	}
 
 	.deletion-popup ul {
 		list-style: none;
 		padding: 0;
-		margin: 0;
+		margin: 0 0 0.75rem 0;
+		max-height: 200px;
+		overflow-y: auto;
 	}
 
 	.deletion-popup li {
-		padding: 8px;
+		padding: 0.5rem 0.75rem;
 		cursor: pointer;
-		border-radius: 4px;
-		margin-bottom: 2px;
-		font-size: 12px;
+		border-radius: var(--radius-sm);
+		margin-bottom: 0.25rem;
+		font-size: 0.85rem;
+		transition: background-color var(--transition-speed) ease;
 	}
 
 	.deletion-popup li:hover {
-		background: #f0f0f0;
+		background: var(--primary-light);
 	}
 
 	.deletion-popup .close-btn {
 		display: block;
 		width: 100%;
-		padding: 6px;
-		background: #ddd;
-		border: none;
-		border-radius: 4px;
-		margin-top: 8px;
+		padding: 0.5rem;
+		background: var(--bg-color);
+		color: var(--text-light);
+		border: 1px solid var(--card-border);
+		border-radius: var(--radius-sm);
+		font-size: 0.85rem;
+		margin-top: 0.5rem;
 		cursor: pointer;
+		transition: all var(--transition-speed) ease;
 	}
 
 	.deletion-popup .close-btn:hover {
-		background: #ccc;
+		background: var(--card-border);
+		color: var(--text-color);
+	}
+
+	.popup-description {
+		margin-bottom: 1.5rem;
+		color: var(--text-light);
+		font-size: 0.9rem;
+	}
+
+	.highlight {
+		color: var(--primary-dark);
+		font-weight: 600;
+		display: inline-block;
+		background: var(--primary-light);
+		border-radius: var(--radius-sm);
+		padding: 0.15rem 0.35rem;
+		margin: 0 0.1rem;
+	}
+
+	.relationship-icon {
+		display: inline-block;
+		font-weight: 600;
+		margin-right: 0.5rem;
+		font-size: 0.9rem;
+	}
+
+	.cancel-button {
+		margin-top: 0.75rem;
+		background: var(--bg-color);
+		color: var(--text-color);
+		border: 1px solid var(--card-border);
+	}
+
+	.cancel-button:hover {
+		background: var(--card-border);
 	}
 </style>
