@@ -1,0 +1,799 @@
+---
+kind: ObjectType
+version: v1
+definition:
+  name: Systems
+  description: Represents metadata about IT systems or devices, including
+    hardware, software, ownership, and operational status details
+  fields:
+    - name: agentId
+      type: Varchar
+      description: The identifier for the monitoring or management agent installed on
+        the system (e.g., 'AGENT-123'), if applicable
+    - name: agentStatus
+      type: Varchar
+      description: The current status of the agent (e.g., 'active', 'inactive',
+        'error'), indicating its operational state
+    - name: agentVersion
+      type: Varchar
+      description: The version of the agent software running on the system (e.g.,
+        '2.1.3'), tracking its software release
+    - name: assetOwnerEmail
+      type: Varchar
+      description: The email address of the individual or entity responsible for the
+        system (e.g., 'jdoe@example.com')
+    - name: assetOwnerName
+      type: Varchar
+      description: The name of the individual or entity responsible for the system
+        (e.g., 'John Doe')
+    - name: checkedOutDate
+      type: Date_1
+      description: The date when the system was last checked out or assigned (e.g.,
+        '2025-02-01'), null if not applicable
+    - name: compliance
+      type: Varchar
+      description: The compliance status of the system with organizational or
+        regulatory standards (e.g., 'compliant', 'non-compliant')
+    - name: hostname
+      type: Varchar
+      description: The network hostname of the system (e.g., 'server01'), used for
+        identification within the network
+    - name: ipAddressExternal
+      type: Varchar
+      description: The external IP address assigned to the system (e.g.,
+        '203.0.113.10'), used for external communication
+    - name: ipAddressInternal
+      type: Varchar
+      description: The internal IP address assigned to the system (e.g.,
+        '192.168.1.100'), used within the local network
+    - name: lastPatched
+      type: Timestamptz
+      description: The timestamp with timezone when the system was last patched or
+        updated (e.g., '2025-02-15 14:00:00+00')
+    - name: lastSeen
+      type: Timestamptz
+      description: The timestamp with timezone when the system was last detected or
+        reported active (e.g., '2025-03-01 10:00:00+00')
+    - name: macAddress
+      type: Varchar
+      description: The Media Access Control (MAC) address of the system’s network
+        interface (e.g., '00:14:22:01:23:45')
+    - name: os
+      type: Varchar
+      description: The operating system running on the system (e.g., 'Windows',
+        'Ubuntu', 'macOS')
+    - name: osVersion
+      type: Varchar
+      description: The version of the operating system (e.g., '10', '20.04', '14.0'),
+        specifying the release or build
+    - name: patchLevel
+      type: Varchar
+      description: The current patch level of the system (e.g., '2023-Q4', 'fully
+        patched'), indicating update completeness
+    - name: patchStatus
+      type: Varchar
+      description: The status of the system’s patching process (e.g., 'up-to-date',
+        'pending', 'failed')
+    - name: patchUpdateAvailable
+      type: Bool_1
+      description: A boolean flag indicating whether a patch or update is available
+        for the system (true/false), null if unknown
+    - name: systemId
+      type: Uuid!
+      description: A unique identifier for the IT system or device, represented as a
+        required universally unique identifier (UUID)
+    - name: systemType
+      type: Varchar
+      description: The type or classification of the system (e.g., 'server',
+        'workstation', 'virtual machine'), defining its role
+  graphql:
+    typeName: Systems
+    inputTypeName: SystemsInput
+  dataConnectorTypeMapping:
+    - dataConnectorName: ITAssets
+      dataConnectorObjectType: systems
+      fieldMapping:
+        agentId:
+          column:
+            name: agent_id
+        agentStatus:
+          column:
+            name: agent_status
+        agentVersion:
+          column:
+            name: agent_version
+        assetOwnerEmail:
+          column:
+            name: asset_owner_email
+        assetOwnerName:
+          column:
+            name: asset_owner_name
+        checkedOutDate:
+          column:
+            name: checked_out_date
+        compliance:
+          column:
+            name: compliance
+        hostname:
+          column:
+            name: hostname
+        ipAddressExternal:
+          column:
+            name: ip_address_external
+        ipAddressInternal:
+          column:
+            name: ip_address_internal
+        lastPatched:
+          column:
+            name: last_patched
+        lastSeen:
+          column:
+            name: last_seen
+        macAddress:
+          column:
+            name: mac_address
+        os:
+          column:
+            name: os
+        osVersion:
+          column:
+            name: os_version
+        patchLevel:
+          column:
+            name: patch_level
+        patchStatus:
+          column:
+            name: patch_status
+        patchUpdateAvailable:
+          column:
+            name: patch_update_available
+        systemId:
+          column:
+            name: system_id
+        systemType:
+          column:
+            name: system_type
+
+---
+kind: TypePermissions
+version: v1
+definition:
+  typeName: Systems
+  permissions:
+    - role: admin
+      output:
+        allowedFields:
+          - agentId
+          - agentStatus
+          - agentVersion
+          - assetOwnerEmail
+          - assetOwnerName
+          - checkedOutDate
+          - compliance
+          - hostname
+          - ipAddressExternal
+          - ipAddressInternal
+          - lastPatched
+          - lastSeen
+          - macAddress
+          - os
+          - osVersion
+          - patchLevel
+          - patchStatus
+          - patchUpdateAvailable
+          - systemId
+          - systemType
+
+---
+kind: AggregateExpression
+version: v1
+definition:
+  name: SystemsAggExp
+  operand:
+    object:
+      aggregatedType: Systems
+      aggregatableFields:
+        - fieldName: agentId
+          aggregateExpression: VarcharAggExp
+        - fieldName: agentStatus
+          aggregateExpression: VarcharAggExp
+        - fieldName: agentVersion
+          aggregateExpression: VarcharAggExp
+        - fieldName: assetOwnerEmail
+          aggregateExpression: VarcharAggExp
+        - fieldName: assetOwnerName
+          aggregateExpression: VarcharAggExp
+        - fieldName: checkedOutDate
+          aggregateExpression: DateAggExp_1
+        - fieldName: compliance
+          aggregateExpression: VarcharAggExp
+        - fieldName: hostname
+          aggregateExpression: VarcharAggExp
+        - fieldName: ipAddressExternal
+          aggregateExpression: VarcharAggExp
+        - fieldName: ipAddressInternal
+          aggregateExpression: VarcharAggExp
+        - fieldName: lastPatched
+          aggregateExpression: TimestamptzAggExp
+        - fieldName: lastSeen
+          aggregateExpression: TimestamptzAggExp
+        - fieldName: macAddress
+          aggregateExpression: VarcharAggExp
+        - fieldName: os
+          aggregateExpression: VarcharAggExp
+        - fieldName: osVersion
+          aggregateExpression: VarcharAggExp
+        - fieldName: patchLevel
+          aggregateExpression: VarcharAggExp
+        - fieldName: patchStatus
+          aggregateExpression: VarcharAggExp
+        - fieldName: patchUpdateAvailable
+          aggregateExpression: BoolAggExp_1
+        - fieldName: systemId
+          aggregateExpression: UuidAggExp
+        - fieldName: systemType
+          aggregateExpression: VarcharAggExp
+  count:
+    enable: true
+  graphql:
+    selectTypeName: SystemsAggExp
+
+---
+kind: OrderByExpression
+version: v1
+definition:
+  name: SystemsOrderByExp
+  operand:
+    object:
+      orderedType: Systems
+      orderableFields:
+        - fieldName: agentId
+          orderByExpression: VarcharOrderByExp
+        - fieldName: agentStatus
+          orderByExpression: VarcharOrderByExp
+        - fieldName: agentVersion
+          orderByExpression: VarcharOrderByExp
+        - fieldName: assetOwnerEmail
+          orderByExpression: VarcharOrderByExp
+        - fieldName: assetOwnerName
+          orderByExpression: VarcharOrderByExp
+        - fieldName: checkedOutDate
+          orderByExpression: Date1OrderByExp
+        - fieldName: compliance
+          orderByExpression: VarcharOrderByExp
+        - fieldName: hostname
+          orderByExpression: VarcharOrderByExp
+        - fieldName: ipAddressExternal
+          orderByExpression: VarcharOrderByExp
+        - fieldName: ipAddressInternal
+          orderByExpression: VarcharOrderByExp
+        - fieldName: lastPatched
+          orderByExpression: TimestamptzOrderByExp
+        - fieldName: lastSeen
+          orderByExpression: TimestamptzOrderByExp
+        - fieldName: macAddress
+          orderByExpression: VarcharOrderByExp
+        - fieldName: os
+          orderByExpression: VarcharOrderByExp
+        - fieldName: osVersion
+          orderByExpression: VarcharOrderByExp
+        - fieldName: patchLevel
+          orderByExpression: VarcharOrderByExp
+        - fieldName: patchStatus
+          orderByExpression: VarcharOrderByExp
+        - fieldName: patchUpdateAvailable
+          orderByExpression: Bool1OrderByExp
+        - fieldName: systemId
+          orderByExpression: UuidOrderByExp
+        - fieldName: systemType
+          orderByExpression: VarcharOrderByExp
+      orderableRelationships: []
+  graphql:
+    expressionTypeName: SystemsOrderByExp
+
+---
+kind: Model
+version: v2
+definition:
+  description: >
+    This represents the core entity of a computer system within a network, such
+    as a desktop, laptop, or server, in a large financial company’s IT
+    environment. It encapsulates critical attributes like a unique identifier
+    (system_id), hostname, IP addresses (internal and external), MAC address,
+    system type (e.g., desktop, laptop, server), operating system (OS) and
+    version, and operational status details (e.g., last_seen, agent_status,
+    patch_status). It serves as the foundational object that other entities
+    (e.g., logins, installed_applications, running_Services) reference via its
+    system_id, acting as a hub for tracking hardware, software, and security
+    posture. For example, a system might be a Windows 10 desktop with a specific
+    patch level indicating vulnerability status, linking it to potential threats
+    or compliance issues.
+  name: Systems
+  objectType: Systems
+  source:
+    dataConnectorName: ITAssets
+    collection: systems
+  filterExpressionType: SystemsBoolExp
+  aggregateExpression: SystemsAggExp
+  orderByExpression: SystemsOrderByExp
+  graphql:
+    selectMany:
+      queryRootField: systems
+      subscription:
+        rootField: systems
+    selectUniques:
+      - queryRootField: systemsBySystemId
+        uniqueIdentifier:
+          - systemId
+        subscription:
+          rootField: systemsBySystemId
+    filterInputTypeName: SystemsFilterInput
+    aggregate:
+      queryRootField: systemsAggregate
+      subscription:
+        rootField: systemsAggregate
+
+---
+kind: ModelPermissions
+version: v1
+definition:
+  modelName: Systems
+  permissions:
+    - role: admin
+      select:
+        filter: null
+        allowSubscriptions: true
+
+---
+kind: Relationship
+version: v1
+definition:
+  name: fileAccesses
+  sourceType: Systems
+  target:
+    model:
+      name: FileAccesses
+      relationshipType: Array
+      aggregate:
+        aggregateExpression: FileAccessesAggExp
+  mapping:
+    - source:
+        fieldPath:
+          - fieldName: systemId
+      target:
+        modelField:
+          - fieldName: systemId
+  graphql:
+    aggregateFieldName: fileAccessesAggregate
+
+---
+kind: Relationship
+version: v1
+definition:
+  name: files
+  sourceType: Systems
+  target:
+    model:
+      name: Files
+      relationshipType: Array
+      aggregate:
+        aggregateExpression: FilesAggExp
+  mapping:
+    - source:
+        fieldPath:
+          - fieldName: systemId
+      target:
+        modelField:
+          - fieldName: systemId
+  graphql:
+    aggregateFieldName: filesAggregate
+
+---
+kind: Relationship
+version: v1
+definition:
+  name: installedApplications
+  sourceType: Systems
+  target:
+    model:
+      name: InstalledApplications
+      relationshipType: Array
+      aggregate:
+        aggregateExpression: InstalledApplicationsAggExp
+  mapping:
+    - source:
+        fieldPath:
+          - fieldName: systemId
+      target:
+        modelField:
+          - fieldName: systemId
+  graphql:
+    aggregateFieldName: installedApplicationsAggregate
+
+---
+kind: Relationship
+version: v1
+definition:
+  name: networkConnections
+  sourceType: Systems
+  target:
+    model:
+      name: NetworkConnections
+      relationshipType: Array
+      aggregate:
+        aggregateExpression: NetworkConnectionsAggExp
+  mapping:
+    - source:
+        fieldPath:
+          - fieldName: systemId
+      target:
+        modelField:
+          - fieldName: systemId
+  graphql:
+    aggregateFieldName: networkConnectionsAggregate
+
+---
+kind: Relationship
+version: v1
+definition:
+  name: openPorts
+  sourceType: Systems
+  target:
+    model:
+      name: OpenPorts
+      relationshipType: Array
+      aggregate:
+        aggregateExpression: OpenPortsAggExp
+  mapping:
+    - source:
+        fieldPath:
+          - fieldName: systemId
+      target:
+        modelField:
+          - fieldName: systemId
+  graphql:
+    aggregateFieldName: openPortsAggregate
+
+---
+kind: Relationship
+version: v1
+definition:
+  name: processExecutions
+  sourceType: Systems
+  target:
+    model:
+      name: ProcessExecutions
+      relationshipType: Array
+      aggregate:
+        aggregateExpression: ProcessExecutionsAggExp
+  mapping:
+    - source:
+        fieldPath:
+          - fieldName: systemId
+      target:
+        modelField:
+          - fieldName: systemId
+  graphql:
+    aggregateFieldName: processExecutionsAggregate
+
+---
+kind: Relationship
+version: v1
+definition:
+  name: runningServices
+  sourceType: Systems
+  target:
+    model:
+      name: RunningServices
+      relationshipType: Array
+      aggregate:
+        aggregateExpression: RunningServicesAggExp
+  mapping:
+    - source:
+        fieldPath:
+          - fieldName: systemId
+      target:
+        modelField:
+          - fieldName: systemId
+  graphql:
+    aggregateFieldName: runningServicesAggregate
+
+---
+kind: Relationship
+version: v1
+definition:
+  name: systemStats
+  sourceType: Systems
+  target:
+    model:
+      name: SystemStats
+      relationshipType: Array
+      aggregate:
+        aggregateExpression: SystemStatsAggExp
+  mapping:
+    - source:
+        fieldPath:
+          - fieldName: systemId
+      target:
+        modelField:
+          - fieldName: systemId
+  graphql:
+    aggregateFieldName: systemStatsAggregate
+
+---
+kind: Relationship
+version: v1
+definition:
+  name: usbDeviceUsages
+  sourceType: Systems
+  target:
+    model:
+      name: UsbDeviceUsage
+      relationshipType: Array
+      aggregate:
+        aggregateExpression: UsbDeviceUsageAggExp
+  mapping:
+    - source:
+        fieldPath:
+          - fieldName: systemId
+      target:
+        modelField:
+          - fieldName: systemId
+  graphql:
+    aggregateFieldName: usbDeviceUsagesAggregate
+
+---
+kind: BooleanExpressionType
+version: v1
+definition:
+  name: SystemsBoolExp
+  operand:
+    object:
+      type: Systems
+      comparableFields:
+        - fieldName: agentId
+          booleanExpressionType: VarcharBoolExp
+        - fieldName: agentStatus
+          booleanExpressionType: VarcharBoolExp
+        - fieldName: agentVersion
+          booleanExpressionType: VarcharBoolExp
+        - fieldName: assetOwnerEmail
+          booleanExpressionType: VarcharBoolExp
+        - fieldName: assetOwnerName
+          booleanExpressionType: VarcharBoolExp
+        - fieldName: checkedOutDate
+          booleanExpressionType: DateBoolExp_1
+        - fieldName: compliance
+          booleanExpressionType: VarcharBoolExp
+        - fieldName: hostname
+          booleanExpressionType: VarcharBoolExp
+        - fieldName: ipAddressExternal
+          booleanExpressionType: VarcharBoolExp
+        - fieldName: ipAddressInternal
+          booleanExpressionType: VarcharBoolExp
+        - fieldName: lastPatched
+          booleanExpressionType: TimestamptzBoolExp
+        - fieldName: lastSeen
+          booleanExpressionType: TimestamptzBoolExp
+        - fieldName: macAddress
+          booleanExpressionType: VarcharBoolExp
+        - fieldName: os
+          booleanExpressionType: VarcharBoolExp
+        - fieldName: osVersion
+          booleanExpressionType: VarcharBoolExp
+        - fieldName: patchLevel
+          booleanExpressionType: VarcharBoolExp
+        - fieldName: patchStatus
+          booleanExpressionType: VarcharBoolExp
+        - fieldName: patchUpdateAvailable
+          booleanExpressionType: BoolBoolExp_1
+        - fieldName: systemId
+          booleanExpressionType: UuidBoolExp
+        - fieldName: systemType
+          booleanExpressionType: VarcharBoolExp
+      comparableRelationships:
+        - relationshipName: fileAccesses
+        - relationshipName: files
+        - relationshipName: installedApplications
+        - relationshipName: networkConnections
+        - relationshipName: openPorts
+        - relationshipName: processExecutions
+        - relationshipName: runningServices
+        - relationshipName: systemStats
+        - relationshipName: usbDeviceUsages
+  logicalOperators:
+    enable: true
+  isNull:
+    enable: true
+  graphql:
+    typeName: SystemsBoolExp
+
+---
+---
+kind: ObjectType
+version: v1
+definition:
+  name: IamLogins
+  fields:
+    - name: loginId
+      type: Uuid!
+      description: "A unique identifier for the login event within the IAM system. This non-nullable UUID serves as the primary key, ensuring each login instance is distinctly identified and tracked for auditing, analysis, or correlation with other system activities."
+    - name: loginMethod
+      type: Varchar
+      description: "The authentication method used for the login event (e.g., 'smart card', 'YubiKey'). This field specifies the mechanism by which the user authenticated, providing insight into security practices and supporting compliance with authentication policies."
+    - name: loginTime
+      type: Timestamptz
+      description: "The timestamp when the login event occurred, recorded in “YYYY-MM-DD HH:MM:SS” format. This field marks the start of the user’s session, enabling tracking of access timing and duration for security and audit purposes."
+    - name: logoutTime
+      type: Timestamptz
+      description: "The timestamp when the user logged out, recorded in “YYYY-MM-DD HH:MM:SS” format, or null if the session is still active. This field indicates the end of the session, supporting session duration analysis and identification of active or incomplete logins."
+    - name: systemId
+      type: Uuid
+      description: "The unique identifier of the system or resource the user logged into. This UUID links the login event to a specific system within the IAM ecosystem, facilitating correlation of access events with system-specific activities or configurations."
+    - name: userName
+      type: Varchar
+      description: "The username or identifier of the user who performed the login (e.g., 'SGriffith'). This field associates the login event with a specific account or identity, enabling tracking of individual user activity and access patterns within the IAM system."
+  graphql:
+    typeName: iam_IamLogins
+    inputTypeName: iam_IamLoginsInput
+  dataConnectorTypeMapping:
+    - dataConnectorName: iam
+      dataConnectorObjectType: iam_logins
+      fieldMapping:
+        loginId:
+          column:
+            name: login_id
+        loginMethod:
+          column:
+            name: login_method
+        loginTime:
+          column:
+            name: login_time
+        logoutTime:
+          column:
+            name: logout_time
+        systemId:
+          column:
+            name: system_id
+        userName:
+          column:
+            name: user_name
+
+---
+kind: TypePermissions
+version: v1
+definition:
+  typeName: IamLogins
+  permissions:
+    - role: admin
+      output:
+        allowedFields:
+          - loginId
+          - loginMethod
+          - loginTime
+          - logoutTime
+          - systemId
+          - userName
+
+---
+kind: BooleanExpressionType
+version: v1
+definition:
+  name: IamLoginsBoolExp
+  operand:
+    object:
+      type: IamLogins
+      comparableFields:
+        - fieldName: loginId
+          booleanExpressionType: UuidBoolExp
+        - fieldName: loginMethod
+          booleanExpressionType: VarcharBoolExp
+        - fieldName: loginTime
+          booleanExpressionType: TimestamptzBoolExp
+        - fieldName: logoutTime
+          booleanExpressionType: TimestamptzBoolExp
+        - fieldName: systemId
+          booleanExpressionType: UuidBoolExp
+        - fieldName: userName
+          booleanExpressionType: VarcharBoolExp
+      comparableRelationships: []
+  logicalOperators:
+    enable: true
+  isNull:
+    enable: true
+  graphql:
+    typeName: iam_IamLoginsBoolExp
+
+---
+kind: AggregateExpression
+version: v1
+definition:
+  name: IamLoginsAggExp
+  operand:
+    object:
+      aggregatedType: IamLogins
+      aggregatableFields:
+        - fieldName: loginId
+          aggregateExpression: UuidAggExp
+        - fieldName: loginMethod
+          aggregateExpression: VarcharAggExp
+        - fieldName: loginTime
+          aggregateExpression: TimestamptzAggExp
+        - fieldName: logoutTime
+          aggregateExpression: TimestamptzAggExp
+        - fieldName: systemId
+          aggregateExpression: UuidAggExp
+        - fieldName: userName
+          aggregateExpression: VarcharAggExp
+  count:
+    enable: true
+  graphql:
+    selectTypeName: iam_IamLoginsAggExp
+
+---
+kind: OrderByExpression
+version: v1
+definition:
+  name: IamLoginsOrderByExp
+  operand:
+    object:
+      orderedType: IamLogins
+      orderableFields:
+        - fieldName: loginId
+          orderByExpression: UuidOrderByExp
+        - fieldName: loginMethod
+          orderByExpression: VarcharOrderByExp
+        - fieldName: loginTime
+          orderByExpression: TimestamptzOrderByExp
+        - fieldName: logoutTime
+          orderByExpression: TimestamptzOrderByExp
+        - fieldName: systemId
+          orderByExpression: UuidOrderByExp
+        - fieldName: userName
+          orderByExpression: VarcharOrderByExp
+      orderableRelationships: []
+  graphql:
+    expressionTypeName: iam_IamLoginsOrderByExp
+
+---
+kind: Model
+version: v2
+definition:
+  description: >
+    Represents login events within an IAM system, capturing details of an identity’s authentication to a system or resource. This object records the timing, method, and user associated with the login, enabling tracking of access activity, security monitoring, and compliance auditing across integrated systems.  This object can correllate IT Asset data like network connections, usb device activity, etc. with IAM data like logins, entitlements, identities, etc.
+  name: IamLogins
+  objectType: IamLogins
+  source:
+    dataConnectorName: iam
+    collection: iam_logins
+  filterExpressionType: IamLoginsBoolExp
+  aggregateExpression: IamLoginsAggExp
+  orderByExpression: IamLoginsOrderByExp
+  graphql:
+    selectMany:
+      queryRootField: iam__iamLogins
+      subscription:
+        rootField: iam__iamLogins
+    selectUniques:
+      - queryRootField: iam__iamLoginsByLoginId
+        uniqueIdentifier:
+          - loginId
+        subscription:
+          rootField: iam__iamLoginsByLoginId
+    filterInputTypeName: iam_IamLoginsFilterInput
+    aggregate:
+      queryRootField: iam__iamLoginsAggregate
+      subscription:
+        rootField: iam__iamLoginsAggregate
+
+---
+kind: ModelPermissions
+version: v1
+definition:
+  modelName: IamLogins
+  permissions:
+    - role: admin
+      select:
+        filter: null
+        allowSubscriptions: true
+

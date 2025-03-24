@@ -31,11 +31,68 @@
 	let showErrorNotification = false;
 	let errorTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
+	// WebGL settings
+	let effectMode: 'glow' | 'fire' | 'neon' | 'pulse' = 'fire';
+	let effectIntensity: number = 1.5;
+	let effectsEnabled: boolean = true; // New state variable to track if effects are enabled
+	let canvasElement: HTMLDivElement;
+
 	let showDebugInfo = false; // Added debug info flag
+
+	// Add tooltip state variables
+	let showTooltip = false;
+	let tooltipContent = '';
+	let tooltipPosition = { x: 0, y: 0 };
+	let highlightedRelationship: number | null = null;
+
+	onMount(() => {
+		window.addEventListener('resize', updateEffects);
+
+		// Give a small delay to ensure all elements are rendered
+		setTimeout(() => {
+			// Enable pointer events on hover paths
+			const hoverPaths = document.querySelectorAll('.canvas svg path[style*="cursor: pointer"]');
+			hoverPaths.forEach((path) => {
+				(path as HTMLElement).style.pointerEvents = 'all';
+			});
+
+			console.log('Initialized hover paths:', hoverPaths.length);
+		}, 500);
+
+		return () => window.removeEventListener('resize', updateEffects);
+	});
+
+	// Simple function to update effects when needed
+	function updateEffects() {
+		// This is just to trigger a reactive update
+		effectIntensity = effectIntensity;
+	}
 
 	// Toggle debug info
 	function toggleDebugInfo() {
 		showDebugInfo = !showDebugInfo;
+
+		// Add or remove debug-mode class to canvas element for hover area visualization
+		if (canvasElement) {
+			if (showDebugInfo) {
+				canvasElement.classList.add('debug-mode');
+			} else {
+				canvasElement.classList.remove('debug-mode');
+			}
+		}
+	}
+
+	// Toggle WebGL effect mode
+	function toggleEffectMode() {
+		const modes = ['glow', 'fire', 'neon', 'pulse'];
+		const currentIndex = modes.indexOf(effectMode);
+		const nextIndex = (currentIndex + 1) % modes.length;
+		effectMode = modes[nextIndex] as 'glow' | 'fire' | 'neon' | 'pulse';
+	}
+
+	// Toggle effects on/off
+	function toggleEffectsEnabled() {
+		effectsEnabled = !effectsEnabled;
 	}
 
 	// Show error message
@@ -184,6 +241,57 @@
 	// Track object dragging during movement
 	function handleDragMove(event: CustomEvent) {
 		const { object, position } = event.detail;
+		const oldPosition = positions[object.definition.name];
+
+		// Only create trails for significant movement
+		if (
+			oldPosition &&
+			(Math.abs(position.x - oldPosition.x) > 5 || Math.abs(position.y - oldPosition.y) > 5)
+		) {
+			// Create trail effect by adding temporary SVG elements
+			const trailContainer = document.querySelector('.canvas svg');
+			if (trailContainer) {
+				const objectColor = getObjectColor(object.definition.name);
+
+				// Create a trail particle
+				const trail = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+				trail.setAttribute('cx', String(oldPosition.x + 120)); // Center of object card
+				trail.setAttribute('cy', String(oldPosition.y + 25)); // Approx top of object card
+				trail.setAttribute('r', String(3 + Math.random() * 5));
+				trail.setAttribute('fill', objectColor);
+				trail.setAttribute('opacity', '0.7');
+				trail.setAttribute('filter', `url(#${effectMode}-effect)`);
+				trail.classList.add('trail-particle');
+
+				// Add animation to fade out and remove
+				const anim = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
+				anim.setAttribute('attributeName', 'opacity');
+				anim.setAttribute('from', '0.7');
+				anim.setAttribute('to', '0');
+				anim.setAttribute('dur', '1s');
+				anim.setAttribute('begin', '0s');
+				anim.setAttribute('fill', 'freeze');
+				trail.appendChild(anim);
+
+				trailContainer.appendChild(trail);
+
+				// Remove the trail after animation completes
+				setTimeout(() => {
+					if (trail.parentNode) {
+						trail.parentNode.removeChild(trail);
+					}
+				}, 1000);
+			}
+
+			// Temporarily increase effect intensity during movement for more dramatic effect
+			const originalIntensity = effectIntensity;
+			effectIntensity = Math.min(3.0, originalIntensity * 1.2);
+
+			// Reset intensity after a short delay
+			setTimeout(() => {
+				effectIntensity = originalIntensity;
+			}, 300);
+		}
 
 		// Update the object's position
 		positions[object.definition.name] = position;
@@ -333,26 +441,62 @@
 		// Try to find the actual DOM element for more accurate positioning
 		const objectElement = objectRefs.get(objectName);
 		if (objectElement) {
+			const objectRect = objectElement.getBoundingClientRect();
+			const svg = document.querySelector('.canvas svg');
+			if (!svg) return { x: 0, y: 0 };
+
+			const svgRect = svg.getBoundingClientRect();
+
+			// Get the field list container (ul element)
+			const fieldList = objectElement.querySelector('ul');
+			if (!fieldList) return { x: 0, y: 0 };
+
 			// Find the field element for this field
 			const fieldElements = Array.from(objectElement.querySelectorAll('li'));
 			if (fieldIndex < fieldElements.length) {
 				const fieldElement = fieldElements[fieldIndex];
 				const fieldRect = fieldElement.getBoundingClientRect();
-				const objectRect = objectElement.getBoundingClientRect();
-				const svg = document.querySelector('.canvas svg');
 
-				if (svg) {
-					const svgRect = svg.getBoundingClientRect();
+				// Check if the field is within the visible area of the object card
+				const isVisible =
+					fieldRect.top >= objectRect.top &&
+					fieldRect.bottom <= objectRect.bottom &&
+					// Add a small buffer to handle partially visible fields
+					fieldRect.top >= objectRect.top - 5 &&
+					fieldRect.bottom <= objectRect.bottom + 5;
 
-					// Calculate anchor point at the border of the property row
-					// For source fields (outgoing), use the right border
-					// For target fields (incoming), use the left border
+				if (isVisible) {
+					// Field is visible, use the field's position
 					return {
 						x: isSource
 							? objectRect.right - svgRect.left // Right edge for source
 							: objectRect.left - svgRect.left, // Left edge for target
 						y: fieldRect.top + fieldRect.height / 2 - svgRect.top // Middle of the field row
 					};
+				} else {
+					// Field is scrolled out of view
+					// Determine if it's scrolled above or below
+					const fieldListRect = fieldList.getBoundingClientRect();
+					const isAbove = fieldRect.bottom < fieldListRect.top + 5; // Field is above the visible area
+					const isBelow = fieldRect.top > fieldListRect.bottom - 5; // Field is below the visible area
+
+					if (isAbove) {
+						// Anchor to the top of the visible field list area
+						return {
+							x: isSource
+								? objectRect.right - svgRect.left // Right edge for source
+								: objectRect.left - svgRect.left, // Left edge for target
+							y: fieldListRect.top + 5 - svgRect.top // Top of field list + small padding
+						};
+					} else if (isBelow) {
+						// Anchor to the bottom of the visible field list area
+						return {
+							x: isSource
+								? objectRect.right - svgRect.left // Right edge for source
+								: objectRect.left - svgRect.left, // Left edge for target
+							y: fieldListRect.bottom - 5 - svgRect.top // Bottom of field list - small padding
+						};
+					}
 				}
 			}
 		}
@@ -393,14 +537,313 @@
 			color
 		};
 	}
+
+	// Check if a field is scrolled out of view
+	function isFieldScrolledOutOfView(objectElement: HTMLElement, fieldName: string): boolean {
+		if (!objectElement) return false;
+
+		const fieldList = objectElement.querySelector('ul');
+		if (!fieldList) return false;
+
+		const fieldListRect = fieldList.getBoundingClientRect();
+		const objectRect = objectElement.getBoundingClientRect();
+
+		// Find the field element by name
+		const fieldElements = Array.from(objectElement.querySelectorAll('li'));
+		const fieldElement = fieldElements.find((li) => {
+			const fieldNameElement = li.querySelector('.field-name');
+			return fieldNameElement && fieldNameElement.textContent === fieldName;
+		});
+
+		if (!fieldElement) return false;
+
+		const fieldRect = fieldElement.getBoundingClientRect();
+
+		// Check if the field is outside the visible area of the field list
+		return (
+			fieldRect.bottom < fieldListRect.top + 5 || // Field is above the visible area
+			fieldRect.top > fieldListRect.bottom - 5 // Field is below the visible area
+		);
+	}
+
+	// Show tooltip for relationship line and highlight the line
+	function showRelationshipTooltip(event: MouseEvent, relationship: any, index: number) {
+		console.log('Hover detected on relationship:', index);
+		highlightedRelationship = index;
+		const fromObj = objects.find((o) => o.definition.name === relationship.from.object);
+		const toObj = objects.find((o) => o.definition.name === relationship.to.object);
+
+		if (fromObj && toObj) {
+			const fromField = fromObj.definition.fields.find(
+				(f: any) => f.name === relationship.from.field
+			);
+			const toField = toObj.definition.fields.find((f: any) => f.name === relationship.to.field);
+
+			// Get color for this relationship
+			const objectColor = getObjectColor(relationship.from.object);
+
+			// Get relationship type icon
+			const typeIcon =
+				relationship.type === 'Array'
+					? '<svg width="16" height="10" viewBox="0 0 16 10"><path d="M0,0 L10,5 L0,10 z M6,0 L16,5 L6,10 z" fill="currentColor" /></svg>'
+					: '<svg width="10" height="10" viewBox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="currentColor" /></svg>';
+
+			// Create formatted tooltip content
+			tooltipContent = `
+				<div class="tooltip-header" style="border-color: ${objectColor}; color: ${objectColor};">
+					Relationship Details
+					<span class="tooltip-type-icon" style="color: ${objectColor};">${typeIcon}</span>
+				</div>
+				<div class="tooltip-section">
+					<span class="tooltip-label">From:</span>
+					<span class="tooltip-value" style="color: ${objectColor};">${relationship.from.object}.${relationship.from.field}</span>
+					${fromField ? `<span class="tooltip-type">(${fromField.type})</span>` : ''}
+				</div>
+				<div class="tooltip-section">
+					<span class="tooltip-label">To:</span>
+					<span class="tooltip-value">${relationship.to.object}.${relationship.to.field}</span>
+					${toField ? `<span class="tooltip-type">(${toField.type})</span>` : ''}
+				</div>
+				<div class="tooltip-section">
+					<span class="tooltip-label">Type:</span>
+					<span class="tooltip-value tooltip-badge" style="background-color: ${objectColor};">
+						${relationship.type === 'Array' ? 'One-to-Many' : 'One-to-One'}
+					</span>
+				</div>
+				${
+					relationship.description
+						? `
+				<div class="tooltip-section">
+					<span class="tooltip-label">Description:</span>
+					<span class="tooltip-value tooltip-description">${relationship.description}</span>
+				</div>
+				`
+						: ''
+				}
+				${
+					relationship.created
+						? `
+				<div class="tooltip-section tooltip-meta">
+					<span class="tooltip-label">Created:</span>
+					<span class="tooltip-value">${new Date(relationship.created).toLocaleString()}</span>
+				</div>
+				`
+						: ''
+				}
+			`;
+
+			// Position tooltip near the relationship midpoint for better visibility
+			const fromCoords = getFieldCoordinates(
+				relationship.from.object,
+				relationship.from.field,
+				true
+			);
+			const toCoords = getFieldCoordinates(relationship.to.object, relationship.to.field, false);
+
+			// Calculate midpoint of the relationship
+			const midX = (fromCoords.x + toCoords.x) / 2;
+			const midY = (fromCoords.y + toCoords.y) / 2;
+
+			// Convert to viewport coordinates
+			const svg = document.querySelector('.canvas svg');
+			let x = midX;
+			let y = midY;
+
+			if (svg) {
+				const svgRect = svg.getBoundingClientRect();
+				x += svgRect.left;
+				y += svgRect.top;
+			} else {
+				// Fallback to mouse position if SVG not found
+				x = event.clientX;
+				y = event.clientY;
+			}
+
+			// Adjust tooltip position
+			x += 20; // Offset from the line
+
+			// Ensure the tooltip stays within viewport bounds
+			const viewportWidth = window.innerWidth;
+			const viewportHeight = window.innerHeight;
+			const tooltipWidth = 280; // Approximate max width
+			const tooltipHeight = 200; // Approximate max height
+
+			// Adjust if too close to right edge
+			if (x + tooltipWidth > viewportWidth - 20) {
+				x = x - tooltipWidth - 40; // Place it on the left side
+			}
+
+			// Adjust if too close to bottom edge
+			if (y + tooltipHeight > viewportHeight - 20) {
+				y = y - tooltipHeight - 20;
+			}
+
+			// Adjust if too close to top edge
+			if (y < 20) {
+				y = 20;
+			}
+
+			tooltipPosition = { x, y };
+			showTooltip = true;
+		}
+	}
+
+	// Hide the tooltip and remove highlight
+	function hideTooltip() {
+		console.log('Hover ended');
+		showTooltip = false;
+		highlightedRelationship = null;
+	}
+
+	// Handle relationship click - for better interaction
+	function handleRelationshipClick(event: MouseEvent, relationship: any, index: number) {
+		// If already highlighted, hide tooltip
+		if (highlightedRelationship === index) {
+			hideTooltip();
+		} else {
+			// Show tooltip for this relationship
+			showRelationshipTooltip(event, relationship, index);
+
+			// When clicking, we want the tooltip to stay visible even if mouse leaves
+			// So we'll remove the mouseleave handler temporarily
+			setTimeout(() => {
+				const hoverPaths = document.querySelectorAll('.hover-path');
+				hoverPaths.forEach((path) => {
+					const element = path as HTMLElement;
+					element.onmouseleave = null;
+				});
+			}, 50);
+		}
+
+		// Prevent event from bubbling to canvas
+		event.stopPropagation();
+	}
+
+	// Update the hideTooltip function to allow it to be called from clicking on canvas
+	function handleCanvasClick(event: MouseEvent) {
+		// Only hide if clicking directly on canvas (not on a relationship or object)
+		if (event.target === canvasElement || event.target === document.querySelector('.canvas svg')) {
+			hideTooltip();
+		}
+	}
 </script>
 
 <svelte:window on:mousemove={onMouseMove} on:mouseup={handleMouseUp} />
 
-<div class="canvas">
-	<svg width="100%" height="100%">
-		<!-- Define markers for line ends -->
+<div class="canvas" bind:this={canvasElement} on:click={handleCanvasClick}>
+	<svg width="100%" height="100%" style="pointer-events: all;">
+		<!-- Define filters for WebGL-like effects -->
 		<defs>
+			<!-- Glow effect filter -->
+			<filter id="glow-effect" x="-50%" y="-50%" width="200%" height="200%">
+				<feGaussianBlur stdDeviation="4" result="blur" />
+				<feComposite in="SourceGraphic" in2="blur" operator="over" />
+				<feColorMatrix
+					type="matrix"
+					values="
+					1 0 0 0 0
+					0 1 0 0 0
+					0 0 1 0 0
+					0 0 0 3 0"
+				/>
+			</filter>
+
+			<!-- Fire effect filter with animated turbulence -->
+			<filter id="fire-effect" x="-50%" y="-50%" width="200%" height="200%">
+				<feTurbulence
+					type="fractalNoise"
+					baseFrequency="0.05"
+					numOctaves="3"
+					seed="0"
+					result="noise"
+				>
+					<animate
+						attributeName="baseFrequency"
+						values="0.05 0.05;0.07 0.07;0.05 0.05"
+						dur="10s"
+						repeatCount="indefinite"
+					/>
+				</feTurbulence>
+				<feColorMatrix
+					in="noise"
+					type="matrix"
+					values="
+					1 0 0 0 0
+					0 1 0 0 0 
+					0 0 1 0 0
+					0 0 0 2 -0.5"
+					result="coloredNoise"
+				/>
+				<feComposite operator="in" in="coloredNoise" in2="SourceGraphic" result="maskedNoise" />
+				<feGaussianBlur in="maskedNoise" stdDeviation="3" result="blur" />
+				<feComponentTransfer in="blur" result="brighten">
+					<feFuncR type="linear" slope="3" intercept="0" />
+					<feFuncG type="linear" slope="3" intercept="0" />
+					<feFuncB type="linear" slope="1.5" intercept="0" />
+				</feComponentTransfer>
+				<feComposite operator="over" in="brighten" in2="SourceGraphic" />
+				<feDisplacementMap
+					in="SourceGraphic"
+					in2="noise"
+					scale="5"
+					xChannelSelector="R"
+					yChannelSelector="G"
+				/>
+			</filter>
+
+			<!-- Neon effect filter with brightness animation -->
+			<filter id="neon-effect" x="-50%" y="-50%" width="200%" height="200%">
+				<feGaussianBlur stdDeviation="3" result="blur">
+					<animate
+						attributeName="stdDeviation"
+						values="2.5;3.5;2.5"
+						dur="2s"
+						repeatCount="indefinite"
+					/>
+				</feGaussianBlur>
+				<feComponentTransfer in="blur" result="glow">
+					<feFuncR type="linear" slope="4" intercept="0" />
+					<feFuncG type="linear" slope="4" intercept="0" />
+					<feFuncB type="linear" slope="4" intercept="0" />
+				</feComponentTransfer>
+				<feComposite operator="over" in="glow" in2="SourceGraphic" />
+			</filter>
+
+			<!-- Pulse effect filter with animation -->
+			<filter id="pulse-effect" x="-50%" y="-50%" width="200%" height="200%">
+				<feTurbulence type="turbulence" baseFrequency="0.05" numOctaves="2" result="turbulence">
+					<animate
+						attributeName="baseFrequency"
+						values="0.05;0.1;0.05"
+						dur="8s"
+						repeatCount="indefinite"
+					/>
+				</feTurbulence>
+				<feDisplacementMap
+					in="SourceGraphic"
+					in2="turbulence"
+					scale="2"
+					xChannelSelector="R"
+					yChannelSelector="G"
+					result="displaced"
+				/>
+				<feGaussianBlur in="displaced" stdDeviation="2" result="blur" />
+				<feColorMatrix
+					in="blur"
+					type="matrix"
+					values="
+					1 0 0 0 0
+					0 1 0 0 0
+					0 0 1 0 0
+					0 0 0 5 -1"
+					result="glow"
+				/>
+				<feMerge>
+					<feMergeNode in="glow" />
+					<feMergeNode in="displaced" />
+				</feMerge>
+			</filter>
+
 			<!-- Temporary connection marker -->
 			<marker
 				id="arrow-temp"
@@ -437,6 +880,15 @@
 				{@const objectColor = getObjectColor(rel.from.object)}
 				{@const markerId = `arrow-${idx}`}
 				{@const arrayMarkerId = `arrow-array-${idx}`}
+				{@const isHighlighted = highlightedRelationship === idx}
+
+				<!-- Check if we need to use a different line style for scrolled-out fields -->
+				{@const objectElement = objectRefs.get(rel.from.object)}
+				{@const isSourceFieldScrolledOut =
+					objectElement && isFieldScrolledOutOfView(objectElement, rel.from.field)}
+				{@const isTargetFieldScrolledOut = objectRefs.get(rel.to.object)
+					? isFieldScrolledOutOfView(objectRefs.get(rel.to.object)!, rel.to.field)
+					: false}
 
 				<!-- Create a marker for this relationship's arrow -->
 				<marker
@@ -448,7 +900,11 @@
 					markerHeight="6"
 					orient="auto-start-reverse"
 				>
-					<path d="M 0 0 L 10 5 L 0 10 z" fill={objectColor} />
+					<path
+						d="M 0 0 L 10 5 L 0 10 z"
+						fill={objectColor}
+						filter={effectsEnabled && effectMode === 'glow' ? 'url(#glow-effect)' : null}
+					/>
 				</marker>
 
 				<!-- Create a marker for array relationships if needed -->
@@ -462,7 +918,11 @@
 						markerHeight="6"
 						orient="auto-start-reverse"
 					>
-						<path d="M 0 0 L 10 5 L 0 10 z M 6 0 L 16 5 L 6 10 z" fill={objectColor} />
+						<path
+							d="M 0 0 L 10 5 L 0 10 z M 6 0 L 16 5 L 6 10 z"
+							fill={objectColor}
+							filter={effectsEnabled && effectMode === 'glow' ? 'url(#glow-effect)' : null}
+						/>
 					</marker>
 				{/if}
 
@@ -476,8 +936,27 @@
 					markerHeight="4"
 					orient="auto"
 				>
-					<path d="M 0 0 L 6 3 L 0 6 z" fill={objectColor} />
+					<path
+						d="M 0 0 L 6 3 L 0 6 z"
+						fill={objectColor}
+						filter={effectsEnabled && effectMode === 'glow' ? 'url(#glow-effect)' : null}
+					/>
 				</marker>
+
+				<!-- Create effect-specific definitions for this relationship -->
+				{@const effectId = `effect-${idx}`}
+				{@const gradientId = `gradient-${idx}`}
+
+				<linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
+					<stop offset="0%" stop-color={objectColor} />
+					<stop
+						offset="50%"
+						stop-color={`hsl(${parseInt(objectColor.slice(1), 16) % 360}, 100%, 75%)`}
+					/>
+					<stop offset="100%" stop-color={objectColor} />
+					<animate attributeName="x1" values="0%;100%;0%" dur="3s" repeatCount="indefinite" />
+					<animate attributeName="x2" values="100%;0%;100%" dur="3s" repeatCount="indefinite" />
+				</linearGradient>
 
 				<!-- Path with curved connection using object-specific color -->
 				<path
@@ -487,11 +966,48 @@
 						  {fromCoords.x + (toCoords.x - fromCoords.x) * 0.5},{toCoords.y} 
 						  {toCoords.x - 15},{toCoords.y} 
 						H {toCoords.x}"
-					stroke={objectColor}
-					stroke-width="2"
+					stroke={effectsEnabled && effectMode === 'pulse' ? `url(#${gradientId})` : objectColor}
+					stroke-width={effectsEnabled
+						? 2 * effectIntensity * (isHighlighted ? 1.5 : 1)
+						: 2 * (isHighlighted ? 1.5 : 1)}
 					fill="none"
+					stroke-dasharray={isSourceFieldScrolledOut || isTargetFieldScrolledOut ? '5,3' : 'none'}
 					marker-end={rel.type === 'Array' ? `url(#${arrayMarkerId})` : `url(#${markerId})`}
-					opacity="0.9"
+					opacity={isHighlighted ? '1' : '0.9'}
+					filter={effectsEnabled
+						? isHighlighted
+							? 'url(#glow-effect)'
+							: `url(#${effectMode}-effect)`
+						: null}
+					style="--effect-intensity: {effectIntensity *
+						(isHighlighted ? 1.5 : 1)}; transition: all 0.2s ease;"
+				>
+					{#if effectsEnabled && (effectMode === 'fire' || effectMode === 'pulse') && !isHighlighted}
+						<animate
+							attributeName="stroke-opacity"
+							values="0.7;1;0.7"
+							dur="1.5s"
+							repeatCount="indefinite"
+						/>
+					{/if}
+				</path>
+
+				<!-- Invisible wider path for better hover detection -->
+				<path
+					d="M {fromCoords.x},{fromCoords.y} 
+						H {fromCoords.x + 15} 
+						C {fromCoords.x + (toCoords.x - fromCoords.x) * 0.5},{fromCoords.y} 
+						  {fromCoords.x + (toCoords.x - fromCoords.x) * 0.5},{toCoords.y} 
+						  {toCoords.x - 15},{toCoords.y} 
+						H {toCoords.x}"
+					stroke="transparent"
+					stroke-width="20"
+					fill="none"
+					style="cursor: pointer; pointer-events: all;"
+					class="hover-path {isHighlighted ? 'hover-active' : ''}"
+					on:mouseenter={(e) => showRelationshipTooltip(e, rel, idx)}
+					on:mouseleave={hideTooltip}
+					on:click|stopPropagation={(e) => handleRelationshipClick(e, rel, idx)}
 				/>
 
 				<!-- Directional arrow in the middle of the path -->
@@ -504,16 +1020,42 @@
 					<path
 						d="M -8,0 L 8,0 M 0,-5 L 8,0 L 0,5"
 						stroke={objectColor}
-						stroke-width="2"
+						stroke-width={isHighlighted ? '3' : '2'}
 						fill="none"
+						filter={effectsEnabled
+							? isHighlighted
+								? 'url(#glow-effect)'
+								: `url(#${effectMode}-effect)`
+							: null}
 					/>
 				</g>
 
-				<!-- Small dot at source point for better visibility -->
-				<circle cx={fromCoords.x} cy={fromCoords.y} r="3" fill={objectColor} opacity="0.8" />
+				<!-- Small dots at source and target points -->
+				<circle
+					cx={fromCoords.x}
+					cy={fromCoords.y}
+					r={isHighlighted ? '4' : '3'}
+					fill={objectColor}
+					opacity={isHighlighted ? '1' : '0.8'}
+					filter={effectsEnabled
+						? isHighlighted
+							? 'url(#glow-effect)'
+							: `url(#${effectMode}-effect)`
+						: null}
+				/>
 
-				<!-- Small dot at target point for better visibility -->
-				<circle cx={toCoords.x} cy={toCoords.y} r="3" fill={objectColor} opacity="0.8" />
+				<circle
+					cx={toCoords.x}
+					cy={toCoords.y}
+					r={isHighlighted ? '4' : '3'}
+					fill={objectColor}
+					opacity={isHighlighted ? '1' : '0.8'}
+					filter={effectsEnabled
+						? isHighlighted
+							? 'url(#glow-effect)'
+							: `url(#${effectMode}-effect)`
+						: null}
+				/>
 
 				<!-- Debug info showing coordinates -->
 				{#if showDebugInfo}
@@ -542,10 +1084,17 @@
 				stroke-dasharray="4"
 				marker-end="url(#arrow-temp)"
 				opacity="0.6"
+				filter={effectsEnabled ? 'url(#glow-effect)' : null}
 			/>
 
 			<!-- Small dot at start point for the dragging line -->
-			<circle cx={lineStart.x} cy={lineStart.y} r="3" fill="#999999" />
+			<circle
+				cx={lineStart.x}
+				cy={lineStart.y}
+				r="3"
+				fill="#999999"
+				filter={effectsEnabled ? 'url(#glow-effect)' : null}
+			/>
 		{/if}
 	</svg>
 
@@ -571,6 +1120,29 @@
 		<button on:click={toggleDebugInfo} class="debug-button">
 			{showDebugInfo ? 'Hide Debug Info' : 'Show Debug Info'}
 		</button>
+		<button
+			on:click={toggleEffectsEnabled}
+			class="effect-button"
+			class:effect-disabled={!effectsEnabled}
+		>
+			{effectsEnabled ? 'Effects: On' : 'Effects: Off'}
+		</button>
+		{#if effectsEnabled}
+			<button on:click={toggleEffectMode} class="effect-mode-button">
+				Mode: {effectMode}
+			</button>
+			<div class="intensity-control">
+				<label for="effect-intensity">Intensity: {effectIntensity.toFixed(1)}</label>
+				<input
+					type="range"
+					id="effect-intensity"
+					min="0.2"
+					max="3.0"
+					step="0.1"
+					bind:value={effectIntensity}
+				/>
+			</div>
+		{/if}
 	</div>
 
 	<!-- Color debug info -->
@@ -670,6 +1242,17 @@
 			<button class="close-btn" on:click={closeDeletionPopup}>Cancel</button>
 		</div>
 	{/if}
+
+	<!-- Tooltip for relationship details -->
+	{#if showTooltip}
+		<div
+			class="relationship-tooltip"
+			style="left: {tooltipPosition.x}px; top: {tooltipPosition.y}px;"
+			transition:fade={{ duration: 150 }}
+		>
+			{@html tooltipContent}
+		</div>
+	{/if}
 </div>
 
 <style>
@@ -690,7 +1273,7 @@
 		left: 0;
 		width: 100%;
 		height: 100%;
-		pointer-events: none; /* Allow clicks to pass through to cards */
+		pointer-events: none; /* By default allow clicks to pass through */
 	}
 
 	.popup-overlay {
@@ -954,9 +1537,13 @@
 		top: 10px;
 		left: 10px;
 		z-index: 1000;
+		display: flex;
+		gap: 8px;
 	}
 
-	.debug-button {
+	.debug-button,
+	.effect-button,
+	.effect-mode-button {
 		background: var(--bg-color);
 		color: var(--text-color);
 		border: 1px solid var(--card-border);
@@ -968,7 +1555,207 @@
 		transition: all var(--transition-speed) ease;
 	}
 
-	.debug-button:hover {
+	.effect-button {
+		background: var(--primary-light);
+		color: var(--primary-dark);
+		border-color: var(--primary-color);
+	}
+
+	.effect-mode-button {
+		background: var(--secondary-light);
+		color: var(--secondary-dark);
+		border-color: var(--secondary-color);
+	}
+
+	.effect-button.effect-disabled {
 		background: var(--card-border);
+		color: var(--text-light);
+		border-color: var(--card-border);
+	}
+
+	.debug-button:hover,
+	.effect-button:hover,
+	.effect-mode-button:hover {
+		background: var(--card-border);
+	}
+
+	.effect-button:hover {
+		background: var(--primary-color);
+		color: white;
+	}
+
+	.effect-mode-button:hover {
+		background: var(--secondary-color);
+		color: white;
+	}
+
+	.intensity-control {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.intensity-control label {
+		font-weight: 500;
+	}
+
+	.intensity-control input[type='range'] {
+		width: 100px;
+	}
+
+	@keyframes pulse {
+		0% {
+			filter: drop-shadow(0 0 2px currentColor);
+		}
+		50% {
+			filter: drop-shadow(0 0 8px currentColor);
+		}
+		100% {
+			filter: drop-shadow(0 0 2px currentColor);
+		}
+	}
+
+	@keyframes flow {
+		0% {
+			stroke-dashoffset: 0;
+		}
+		100% {
+			stroke-dashoffset: 20;
+		}
+	}
+
+	@keyframes float {
+		0% {
+			transform: translateY(0) translateX(0);
+		}
+		50% {
+			transform: translateY(-10px) translateX(5px);
+		}
+		100% {
+			transform: translateY(0) translateX(0);
+		}
+	}
+
+	/* Add styles for animated effects */
+	:global(.canvas path[filter*='fire-effect']) {
+		animation: pulse 2s infinite;
+	}
+
+	:global(.canvas path[filter*='glow-effect']) {
+		filter: drop-shadow(0 0 3px currentColor) drop-shadow(0 0 6px currentColor);
+	}
+
+	:global(.canvas path[filter*='neon-effect']) {
+		filter: drop-shadow(0 0 5px currentColor) drop-shadow(0 0 8px currentColor);
+	}
+
+	:global(.canvas path[filter*='pulse-effect']) {
+		animation: pulse 2s infinite;
+		stroke-dasharray: 4, 2;
+		animation: flow 1s linear infinite;
+	}
+
+	:global(.trail-particle) {
+		animation: float 3s ease-in-out;
+	}
+
+	/* Enhanced SVG filters - these make the effects more visible */
+	:global(.canvas circle[filter]) {
+		mix-blend-mode: screen;
+	}
+
+	:global(.canvas path[filter]) {
+		mix-blend-mode: normal;
+	}
+
+	/* Tooltip styles */
+	.relationship-tooltip {
+		position: fixed;
+		background-color: var(--card-bg);
+		border: 1px solid var(--card-border);
+		border-radius: var(--radius-md);
+		padding: 12px;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+		font-size: 0.9rem;
+		z-index: 3000; /* Increased from 1000 */
+		max-width: 280px;
+		pointer-events: none;
+		animation: tooltipPop 0.2s ease-out;
+	}
+
+	@keyframes tooltipPop {
+		0% {
+			opacity: 0;
+			transform: scale(0.9);
+		}
+		100% {
+			opacity: 1;
+			transform: scale(1);
+		}
+	}
+
+	:global(.tooltip-header) {
+		font-weight: 600;
+		font-size: 1rem;
+		margin-bottom: 8px;
+		color: var(--primary-dark);
+		border-bottom: 1px solid var(--card-border);
+		padding-bottom: 4px;
+	}
+
+	:global(.tooltip-section) {
+		margin-bottom: 6px;
+	}
+
+	:global(.tooltip-label) {
+		font-weight: 500;
+		color: var(--text-light);
+		margin-right: 4px;
+	}
+
+	:global(.tooltip-value) {
+		color: var(--text-color);
+		font-weight: 500;
+	}
+
+	:global(.tooltip-type) {
+		color: var(--text-light);
+		font-size: 0.8rem;
+		margin-left: 4px;
+		font-style: italic;
+	}
+
+	:global(.tooltip-type-icon) {
+		margin-left: 4px;
+		font-size: 0.8rem;
+		font-style: normal;
+	}
+
+	:global(.tooltip-badge) {
+		padding: 0.2rem 0.4rem;
+		border-radius: 4px;
+		font-size: 0.8rem;
+		font-weight: 500;
+	}
+
+	:global(.tooltip-description) {
+		font-size: 0.9rem;
+		color: var(--text-light);
+	}
+
+	:global(.tooltip-meta) {
+		font-size: 0.8rem;
+		color: var(--text-light);
+	}
+
+	/* Allow pointer events specifically for hover detection paths */
+	:global(.canvas path[style*='cursor: pointer']) {
+		pointer-events: all !important;
+	}
+
+	/* Debug style to see the hover area (only when debug is on) */
+	:global(.canvas.debug-mode path.hover-active) {
+		stroke: rgba(255, 0, 0, 0.3);
+		stroke-width: 15px;
 	}
 </style>
