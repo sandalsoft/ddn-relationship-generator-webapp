@@ -6,6 +6,8 @@
 	import type { Relationship } from '$lib/types';
 	import { fade } from 'svelte/transition';
 
+
+	// Replace this string with sample.hml for a more complex demo
 	// Default sample YAML with document separators
 	const defaultYaml = `kind: ObjectType
 version: v1
