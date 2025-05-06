@@ -14,6 +14,12 @@
 	let cardElement: HTMLElement;
 	let resizeObserver: ResizeObserver;
 
+	// Handler for clearing all connections
+	function clearConnections(event: MouseEvent) {
+		event.stopPropagation();
+		dispatch('clearConnections', { objectName: object.definition.name });
+	}
+
 	onMount(() => {
 		// Setup resize observer for window resize handling
 		resizeObserver = new ResizeObserver(() => {
@@ -183,6 +189,26 @@
 	<div class="card-header">
 		<h3>{object.definition.name}</h3>
 		<div class="card-actions">
+			<button 
+				class="icon-button small clear-button" 
+				title="Clear Connections" 
+				on:click={clearConnections}
+			>
+				<span class="visually-hidden">Clear Connections</span>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="14"
+					height="14"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				>
+					<path d="M3 3h18v18H3zM15 9l-6 6m0-6l6 6"/>
+				</svg>
+			</button>
 			<button class="icon-button small" title="Collapse card">
 				<span class="visually-hidden">Collapse</span>
 				<svg
@@ -386,6 +412,14 @@
 
 	.icon-button.small:hover {
 		background: rgba(255, 255, 255, 0.3);
+	}
+
+	.clear-button {
+		background: rgba(255, 30, 30, 0.2);
+	}
+	
+	.clear-button:hover {
+		background: rgba(255, 30, 30, 0.3);
 	}
 
 	h3 {
